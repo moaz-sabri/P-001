@@ -17,6 +17,13 @@ final class RuntimeSettings
         if (self::$cache !== null) {
             return self::$cache;
         }
+
+        $cached = \App\Core\Cache::get('runtime.settings');
+        if (is_array($cached)) {
+            self::$cache = $cached;
+            return $cached;
+        }
+
         $rows = Database::all('SELECT `key`, `value` FROM settings');
         $out  = [];
         foreach ($rows as $row) {
@@ -25,6 +32,8 @@ final class RuntimeSettings
         foreach (\App\Config\ProjectConfig::defaultRuntimeSettings() as $k => $v) {
             $out[$k] ??= $v;
         }
+
+        \App\Core\Cache::set('runtime.settings', $out, 60);
         self::$cache = $out;
         return $out;
     }
@@ -66,6 +75,7 @@ final class RuntimeSettings
                 ['k' => $key, 'v' => $value, 'now' => Database::now()]
             );
         }
+        \App\Core\Cache::delete('runtime.settings');
         self::$cache[$key] = $value;
     }
 

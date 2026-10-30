@@ -33,6 +33,18 @@ final class CatalogService
     /** الحمولة الكاملة (bootstrap) لواجهة الزبون. */
     public function snapshot(?string $search = null): array
     {
+        if (!\App\Core\Cache::enabled()) {
+            return $this->buildSnapshot($search);
+        }
+        return \App\Core\Cache::remember(
+            'catalog.snapshot.' . md5((string) $search),
+            30,
+            fn(): array => $this->buildSnapshot($search)
+        );
+    }
+
+    private function buildSnapshot(?string $search = null): array
+    {
         $products = $this->products->catalog(null, $search);
         $counts   = [];
         foreach ($products as $product) {
