@@ -239,7 +239,6 @@ return function (): void {
         require_once BASE_PATH . '/src/Tools/IconGenerator.php';
         $reflection = new \ReflectionClass(\App\Tools\IconGenerator::class);
         $render     = $reflection->getMethod('render');
-        $render->setAccessible(true);
         $pngBytes = $render->invoke(null, 64, '', [234, 88, 12]);
     } else {
         $pngBytes = base64_decode(
