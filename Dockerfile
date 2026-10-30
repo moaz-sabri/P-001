@@ -12,7 +12,7 @@ RUN set -eux; \
     apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS icu-dev sqlite-dev libpng-dev libjpeg-turbo-dev libwebp-dev; \
     docker-php-ext-configure gd --with-jpeg --with-webp; \
-    docker-php-ext-install -j"$(nproc)" pdo_sqlite gd intl; \
+    docker-php-ext-install -j"$(nproc)" pdo_sqlite pdo_mysql gd intl; \
     apk del .build-deps; \
     rm -rf /tmp/*
 

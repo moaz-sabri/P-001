@@ -1,33 +1,5 @@
 # =============================================================================
-# بيئة التطوير المحلية — نفس صورة الإنتاج بالضبط
-#
-# لماذا Docker محليًا؟
-#   اختلاف بيئات الخادم أنتج ثلاثة عيوب في مراجعة سابقة: عيوب تنجح على
-#   خادم PHP المدمج وتفشل على Apache. نفس الصورة في كل مكان = لا مفاجآت.
-#
-# الاستخدام:
-#   docker compose up -d --build
-#   docker exec light-commerce php bin/console install \
-#        --url=http://localhost:8080 --user=admin --pass="كلمة_مرور_قوية"
-#   docker exec light-commerce php bin/console icons
-#   docker exec light-commerce php bin/console seed:demo
-#   docker compose down
-#
-# ملاحظة: الشيفرة **مربوطة من المضيف** (bind mount) بينما الحالة معزولة
-#   في volumes مُسمّاة. الفصل بينهما مقصود:
-#
-#   • storage/ و app/uploads/ ← volumes مُسمّاة (معزولة عن المضيف)
-#     لأن ربطهما من Windows كان يُدخل مسارات Windows داخل local.php
-#     فتتعطّل قاعدة البيانات. هنا يبقى الملف داخل الحاوية نظيفًا.
-#
-#   • بقية المشروع ← bind mount
-#     لأن Dockerfile ينفّذ COPY . /var/www/html، فالشيفرة مثبَّتة داخل
-#     الصورة عند البناء. بدون هذا الربط، كل تعديل على المضيف يبقى
-#     مجهولًا للحاوية حتى إعادة البناء — فتُطوَّر على 1.4.0 وأنت تختبر
-#     1.2.0 دون أي رسالة خطأ.
-#
-#   الترتيب هنا للقراءة فقط: في Docker يربح المسار الأعمق، فيُركَّب
-#   volume storage فوق الربط ولا يظهر محتوى مجلد storage على المضيف إطلاقًا.
+# Docker Compose: app + MySQL + phpMyAdmin
 # =============================================================================
 
 services:
@@ -35,17 +7,61 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: light-commerce
+    container_name: P-001
     ports:
-      - "8080:80"
+      - "8031:80"
     volumes:
       - .:/var/www/html
       - storage-data:/var/www/html/storage
       - uploads-data:/var/www/html/app/uploads
     environment:
       TZ: Asia/Beirut
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_DATABASE: app
+      DB_USERNAME: app
+      DB_PASSWORD: appsecret
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.4
+    container_name: P-001-mysql
+    environment:
+      MYSQL_DATABASE: app
+      MYSQL_USER: app
+      MYSQL_PASSWORD: appsecret
+      MYSQL_ROOT_PASSWORD: rootsecret
+      TZ: Asia/Beirut
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-prootsecret"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: P-001-phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+      UPLOAD_LIMIT: 64M
+    ports:
+      - "8080:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
   storage-data:
   uploads-data:
+  mysql-data:

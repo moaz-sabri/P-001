@@ -97,11 +97,19 @@ final class OrderRepository
     /** رقم ظاهر متسلسل لكل يوم. */
     public function nextNumber(string $day): int
     {
-        Database::run(
-            "INSERT INTO daily_counters (day, value) VALUES (:day, 1)
-             ON CONFLICT(day) DO UPDATE SET value = value + 1",
-            ['day' => $day]
-        );
+        if (Database::driver() === 'mysql') {
+            Database::run(
+                "INSERT INTO daily_counters (day, value) VALUES (:day, 1)
+                 ON DUPLICATE KEY UPDATE value = value + 1",
+                ['day' => $day]
+            );
+        } else {
+            Database::run(
+                "INSERT INTO daily_counters (day, value) VALUES (:day, 1)
+                 ON CONFLICT(day) DO UPDATE SET value = value + 1",
+                ['day' => $day]
+            );
+        }
         return (int) Database::value('SELECT value FROM daily_counters WHERE day = :day', ['day' => $day]);
     }
 

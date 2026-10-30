@@ -20,6 +20,9 @@ final class BackupService
     /** ينشئ نسخة احتياطية ويُرجع مسار الملف. */
     public function create(): string
     {
+        if (\App\Core\Database::driver() !== 'sqlite') {
+            throw new \RuntimeException('Database backups are not available in MySQL mode yet.');
+        }
         $dir = ProjectConfig::storagePath('backups');
         if (!is_dir($dir)) {
             mkdir($dir, 0775, true);
@@ -99,6 +102,9 @@ final class BackupService
     /** استعادة نسخة (تتوقف قاعدة البيانات قبل الاستبدال). */
     public function restore(string $name): bool
     {
+        if (\App\Core\Database::driver() !== 'sqlite') {
+            throw new \RuntimeException('Database restore is not available in MySQL mode yet.');
+        }
         $path = $this->backupPath($name);
         if ($path === null) {
             return false;

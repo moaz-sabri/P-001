@@ -8,12 +8,19 @@ use PDO;
 use PDOException;
 
 /**
- * طبقة قاعدة البيانات — SQLite واحدة، مع WAL واستعلامات محضّرة دائمًا.
+ * ���?�?�? �?�?�?�?�? �?�?�?�?�?�?�?�? �?? SQLite �?�?�?�? MySQL.
+ *
+ * �?�?�?�?�? �?�?�?�?�?�?�?:
+ *  - �?�?�?�? 'db.path' ��? SQLite.
+ *  - �?�?�?�? 'db.host' / 'db.database' (�� env DB_* ) ��? MySQL.
+ *  Database::usePath() �? SQLite �?�? ��?�? (�?�?�?�?�?�?).
  */
 final class Database
 {
     private static ?PDO $pdo = null;
     private static int $txDepth = 0;
+    private static ?string $pathOverride = null;
+    private static string $driver = 'sqlite';
 
     public static function pdo(): PDO
     {
@@ -21,6 +28,52 @@ final class Database
             return self::$pdo;
         }
 
+        $config = app_config('db', []);
+        if (!is_array($config)) {
+            $config = [];
+        }
+
+        $driver = strtolower((string) ($config['driver'] ?? ''));
+        if ($driver === '') {
+            if (self::$pathOverride !== null || isset($config['path'])) {
+                $driver = 'sqlite';
+            } elseif (isset($config['host']) || isset($config['database']) || isset($config['name'])) {
+                $driver = 'mysql';
+            } elseif (getenv('DB_HOST')) {
+                $driver = 'mysql';
+            } else {
+                $driver = 'sqlite';
+            }
+        }
+
+        self::$driver = $driver;
+
+        if ($driver === 'mysql') {
+            $host = (string) ($config['host'] ?? getenv('DB_HOST') ?: '127.0.0.1');
+            $port = (int) ($config['port'] ?? getenv('DB_PORT') ?: 3306);
+            $name = (string) ($config['database'] ?? $config['name'] ?? getenv('DB_DATABASE') ?: getenv('DB_NAME') ?: 'app');
+            $user = (string) ($config['username'] ?? $config['user'] ?? getenv('DB_USERNAME') ?: getenv('DB_USER') ?: 'root');
+            $pass = (string) ($config['password'] ?? $config['pass'] ?? getenv('DB_PASSWORD') ?: getenv('DB_PASS') ?: '');
+
+            $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', $host, $port, $name);
+
+            try {
+                $pdo = new PDO($dsn, $user, $pass, [
+                    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES   => false,
+                ]);
+            } catch (PDOException $e) {
+                throw new \RuntimeException('MySQL connection failed: ' . $e->getMessage(), 0, $e);
+            }
+
+            $pdo->exec('SET NAMES utf8mb4');
+
+            self::$pdo = $pdo;
+            return $pdo;
+        }
+
+        // SQLite
         $path = self::$pathOverride ?? (string) app_config('db.path', BASE_PATH . '/storage/database/app.sqlite');
         $dir  = dirname($path);
         if (!is_dir($dir)) {
@@ -34,7 +87,7 @@ final class Database
                 PDO::ATTR_EMULATE_PREPARES   => false,
             ]);
         } catch (PDOException $e) {
-            throw new \RuntimeException('تعذّر فتح قاعدة البيانات: ' . $e->getMessage(), 0, $e);
+            throw new \RuntimeException('SQLite connection failed: ' . $e->getMessage(), 0, $e);
         }
 
         $pdo->exec('PRAGMA foreign_keys = ON');
@@ -46,27 +99,29 @@ final class Database
         return $pdo;
     }
 
-    /** تبديل ملف قاعدة البيانات (يُستخدم في الاختبارات). */
+    public static function driver(): string
+    {
+        if (self::$pdo === null) {
+            // ensure detection
+            self::pdo();
+        }
+        return self::$driver;
+    }
+
+    /** SQLite-only path override (tests). */
     public static function usePath(string $path): void
     {
         self::$pdo    = null;
         self::$txDepth = 0;
         self::$pathOverride = $path;
+        self::$driver = 'sqlite';
     }
 
-    private static ?string $pathOverride = null;
-
-    /** إغلاق الاتصال (يُستخدم قبل الاستعادة). */
     public static function close(): void
     {
         self::$pdo = null;
     }
 
-    /**
-     * الوقت الحالي بتوقيت النسخة (وليس UTC).
-     * نستخدمه في كل الأعمدة الزمنية بدل datetime('now') في SQLite
-     * لأن دالة latter تُرجع UTC دائمًا، بينما تُعرض التواريخ بتوقيت محلي.
-     */
     public static function now(): string
     {
         return date('Y-m-d H:i:s');
@@ -77,7 +132,6 @@ final class Database
         return date('Y-m-d');
     }
 
-    /** تنفيذ استعلام مع معاملات. */
     public static function run(string $sql, array $params = []): \PDOStatement
     {
         $stmt = self::pdo()->prepare($sql);
@@ -141,7 +195,6 @@ final class Database
         return self::run(sprintf('DELETE FROM %s WHERE %s', $table, $where), $params)->rowCount();
     }
 
-    /** معاملة، مع دعم المعاملات المتداخلة عبر SAVEPOINT. */
     public static function transaction(callable $callback): mixed
     {
         $pdo = self::pdo();

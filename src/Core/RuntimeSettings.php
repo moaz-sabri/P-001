@@ -17,7 +17,7 @@ final class RuntimeSettings
         if (self::$cache !== null) {
             return self::$cache;
         }
-        $rows = Database::all('SELECT key, value FROM settings');
+        $rows = Database::all('SELECT `key`, `value` FROM settings');
         $out  = [];
         foreach ($rows as $row) {
             $out[$row['key']] = $row['value'];
@@ -53,11 +53,19 @@ final class RuntimeSettings
 
     public static function set(string $key, string $value): void
     {
-        Database::run(
-            'INSERT INTO settings (key, value, updated_at) VALUES (:k, :v, :now)
-             ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at',
-            ['k' => $key, 'v' => $value, 'now' => Database::now()]
-        );
+        if (Database::driver() === 'mysql') {
+            Database::run(
+                'INSERT INTO settings (`key`, `value`, updated_at) VALUES (:k, :v, :now)
+                 ON DUPLICATE KEY UPDATE `value` = VALUES(`value`), updated_at = VALUES(updated_at)',
+                ['k' => $key, 'v' => $value, 'now' => Database::now()]
+            );
+        } else {
+            Database::run(
+                'INSERT INTO settings (key, value, updated_at) VALUES (:k, :v, :now)
+                 ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at',
+                ['k' => $key, 'v' => $value, 'now' => Database::now()]
+            );
+        }
         self::$cache[$key] = $value;
     }
 
