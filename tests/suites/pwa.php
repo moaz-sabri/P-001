@@ -151,6 +151,9 @@ return function (): void {
     Assert::contains($apiIndex, 'HttpError', 'أخطاء API مصنّفة ومنظمة');
 
     $authRoutes = (string) file_get_contents(BASE_PATH . '/api/routes/admin.php');
+    foreach (glob(BASE_PATH . '/src/Controllers/Admin/*.php') ?: [] as $controllerFile) {
+        $authRoutes .= "\n" . (string) file_get_contents($controllerFile);
+    }
     Assert::contains($authRoutes, "'Cache-Control' => 'no-store'", 'استجابات الإدارة بدون تخزين مؤقت');
     Assert::contains($authRoutes, 'Csrf::verify', 'كل عملية تعديل تتحقق من CSRF');
 
