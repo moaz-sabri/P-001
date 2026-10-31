@@ -171,6 +171,7 @@ $html = str_replace(
 $seo        = CompanyProfile::seo();
 $pageTitle  = match ($route) {
     'contact'      => 'تواصل معنا',
+    'privacy'      => 'سياسة الخصوصية',
     'products'     => 'المنتجات',
     'cart'         => 'السلة',
     'checkout'     => 'إتمام الطلب',
@@ -235,6 +236,7 @@ header('Content-Type: text/html; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');
 header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
 header('ETag: ' . $etag);
 // لا تُخزَّن نسخة قديمة من الواجهة (ملفاتها مقيّدة بسمة ?v=)
 header('Cache-Control: no-cache, must-revalidate');

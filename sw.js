@@ -34,6 +34,9 @@ const SHELL_ASSETS = [
   APP_BASE + 'manifest.webmanifest',
   APP_BASE + 'assets/icons/icon.svg',
   APP_BASE + 'assets/icons/icon-192.png',
+  APP_BASE + 'pages/landing.html',
+  APP_BASE + 'pages/contact.html',
+  APP_BASE + 'pages/privacy.html',
   APP_BASE + 'assets/icons/icon-512.png',
 ];
 

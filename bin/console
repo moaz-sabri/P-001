@@ -211,6 +211,10 @@ switch ($command) {
         } else {
             $say('فحص الأمان: تعذّر الفحص الآلي — ' . $exposure['hint'], 'warn');
         }
+
+        // بناء ناجح: إغلاق قفل إعادة البناء حتى لا تبقى صفحة التهيئة مقفلة.
+        (new \App\Services\InstanceService())->consumeRebuildKey();
+
         exit(0);
     }
 

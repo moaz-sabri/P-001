@@ -20,8 +20,8 @@ final class BackupService
     /** ينشئ نسخة احتياطية ويُرجع مسار الملف. */
     public function create(): string
     {
-        if (\App\Core\Database::driver() !== 'sqlite') {
-            throw new \RuntimeException('Database backups are not available in MySQL mode yet.');
+        if (\App\Core\Database::driver() === 'mysql') {
+            return $this->createMysql();
         }
         $dir = ProjectConfig::storagePath('backups');
         if (!is_dir($dir)) {
@@ -53,7 +53,9 @@ final class BackupService
     public function listBackups(): array
     {
         $dir   = ProjectConfig::storagePath('backups');
-        $files = is_dir($dir) ? glob($dir . '/backup-*.sqlite') ?: [] : [];
+        $sqlite = is_dir($dir) ? (glob($dir . '/backup-*.sqlite') ?: []) : [];
+        $sql    = is_dir($dir) ? (glob($dir . '/backup-*.sql') ?: []) : [];
+        $files  = array_merge($sqlite, $sql);
         rsort($files);
 
         $out = [];
@@ -78,7 +80,7 @@ final class BackupService
      * نستخدم \A و \z لا ^ و $: الأخير يطابق قبل سطر جديد، فيمرّر
      * "backup-20261013-131813.sqlite\n" بلا رفض.
      */
-    private const NAME_PATTERN = '\Abackup-\d{8}-\d{6}(-\d{1,3})?\.sqlite\z';
+    private const NAME_PATTERN = '\Abackup-\d{8}-\d{6}(-\d{1,3})?\.(sqlite|sql)\z';
 
     public function backupPath(string $name): ?string
     {
@@ -154,6 +156,88 @@ final class BackupService
         $out .= "// نسخة مبهمة من إعدادات النسخة — بلا تجزئة كلمة المرور ولا مفتاح التطبيق.\n";
         $out .= "// أُنتجت في " . date('Y-m-d H:i:s') . "\n\nreturn ";
         $out .= var_export($config, true) . ";\n";
+        return $out;
+    }
+
+
+
+    /**
+     * Create a logical MySQL backup (.sql) and return its path.
+     */
+    private function createMysql(): string
+    {
+        $dir = ProjectConfig::storagePath('backups');
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+
+        $target = $dir . '/backup-' . date('Ymd-His') . '.sql';
+        if (is_file($target)) {
+            for ($i = 2; $i < 100; $i++) {
+                $candidate = $dir . '/backup-' . date('Ymd-His') . '-' . $i . '.sql';
+                if (!is_file($candidate)) {
+                    $target = $candidate;
+                    break;
+                }
+            }
+        }
+
+        $dump = $this->mysqlDump();
+        if (file_put_contents($target, $dump, LOCK_EX) === false) {
+            throw new \RuntimeException('تعذّر كتابة النسخة الاحتياطية.');
+        }
+        @chmod($target, 0600);
+        return $target;
+    }
+
+    /**
+     * Dump all MySQL tables into a single SQL string.
+     */
+    private function mysqlDump(): string
+    {
+        $pdo = \App\Core\Database::pdo();
+        $tables = $pdo->query('SHOW TABLES')->fetchAll(\PDO::FETCH_COLUMN);
+
+        $out = "-- Light-commerce backup\n";
+        $out .= "-- Generated: " . date('c') . "\n\n";
+        $out .= "SET FOREIGN_KEY_CHECKS = 0;\n\n";
+
+        foreach ($tables as $table) {
+            $t = '`' . str_replace('`', '``', (string) $table) . '`';
+            $createStmt = $pdo->query('SHOW CREATE TABLE ' . $t)->fetch(\PDO::FETCH_ASSOC);
+            $createSql = (string) ($createStmt['Create Table'] ?? $createStmt['Create View'] ?? '');
+
+            $out .= "DROP TABLE IF EXISTS " . $t . ";\n";
+            if ($createSql !== '') {
+                $out .= $createSql . ";\n\n";
+            }
+
+            $rows = $pdo->query('SELECT * FROM ' . $t);
+            $columns = null;
+            while ($row = $rows->fetch(\PDO::FETCH_ASSOC)) {
+                if ($columns === null) {
+                    $columns = array_keys($row);
+                }
+                $cols = implode('`, `', array_map(static fn (string $c): string => str_replace('`', '``', $c), $columns));
+                $vals = [];
+                foreach ($columns as $col) {
+                    $v = $row[$col];
+                    if ($v === null) {
+                        $vals[] = 'NULL';
+                    } elseif (is_bool($v)) {
+                        $vals[] = $v ? '1' : '0';
+                    } elseif (is_int($v) || is_float($v)) {
+                        $vals[] = (string) $v;
+                    } else {
+                        $vals[] = "'" . str_replace(["\\", "'"], ["\\\\", "''"], (string) $v) . "'";
+                    }
+                }
+                $out .= "INSERT INTO " . $t . " (`" . $cols . "`) VALUES (" . implode(', ', $vals) . ");\n";
+            }
+            $out .= "\n";
+        }
+
+        $out .= "SET FOREIGN_KEY_CHECKS = 1;\n";
         return $out;
     }
 }

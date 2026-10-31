@@ -267,6 +267,22 @@ final class InstanceService
             $archive = $this->createArchive($paths, $counts);
         }
 
+        /* --- ١½. في وضع MySQL: إفراغ الجداول --- */
+        if ($this->mysqlMode($paths['root'])) {
+            try {
+                $pdo = \App\Core\Database::pdo();
+                $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
+                foreach (['app_meta', 'settings', 'categories', 'products', 'locations',
+                          'orders', 'order_items', 'order_events', 'daily_counters',
+                          'login_attempts'] as $t) {
+                    $pdo->exec('DROP TABLE IF EXISTS `' . $t . '`');
+                }
+                $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
+            } catch (\Throwable) {
+                // ignored
+            }
+        }
+
         /* --- ٢. إغلاق الاتصال قبل لمس ملف SQLite --- */
         $this->closeDatabase($paths['database']);
 
@@ -398,6 +414,17 @@ final class InstanceService
                 $copied[] = $name;
             }
 
+        if ($this->mysqlMode($paths['root'])) {
+            try {
+                $dump = $this->archiveMysqlDump();
+                if ($dump !== '' && @file_put_contents($dir . '/database.sql', $dump, LOCK_EX) !== false) {
+                    @chmod($dir . '/database.sql', 0600);
+                    $copied[] = 'database.sql';
+                }
+            } catch (\Throwable) {
+            }
+        }
+
             $manifest = [
                 'destroyed_at'     => date('c'),
                 'template_version' => ProjectConfig::VERSION,
@@ -499,6 +526,24 @@ final class InstanceService
     private function countRecords(array $paths): array
     {
         $out = array_fill_keys(self::COUNTED_TABLES, 0);
+
+        if ($this->mysqlMode($paths['root'])) {
+            try {
+                $pdo = \App\Core\Database::pdo();
+                foreach (self::COUNTED_TABLES as $table) {
+                    try {
+                        $stmt = $pdo->query('SELECT COUNT(*) FROM `' . $table . '`');
+                        if ($stmt !== false) {
+                            $out[$table] = (int) $stmt->fetchColumn();
+                        }
+                    } catch (\Throwable) {
+                    }
+                }
+            } catch (\Throwable) {
+            }
+            return $out;
+        }
+
         if (!is_file($paths['database'])) {
             return $out;
         }
@@ -536,6 +581,11 @@ final class InstanceService
     /** يغلق اتصال القاعدة إن كان هو نفس الملف المشغول حاليًا. */
     private function closeDatabase(string $path): void
     {
+        if ($this->mysqlMode('')) {
+            \App\Core\Database::close();
+            return;
+        }
+
         $live = (string) app_config('db.path', '');
         if ($live !== '' && $this->sameFile($live, $path)) {
             \App\Core\Database::close();
@@ -592,7 +642,69 @@ final class InstanceService
         ];
     }
 
-    /** مسار نسبي للجذر — لا يُكشف مسار القرص المطلق أبدًا. */
+    private function mysqlMode(string $root): bool
+    {
+        if ($root !== '' && $root !== ProjectConfig::basePath()) {
+            return false;
+        }
+
+        $config = app_config('db', []);
+        if (!is_array($config)) {
+            $config = [];
+        }
+
+        $driver = strtolower((string) ($config['driver'] ?? ''));
+        if ($driver === '') {
+            if (isset($config['path'])) {
+                $driver = 'sqlite';
+            } elseif (isset($config['host']) || isset($config['database']) || isset($config['name'])) {
+                $driver = 'mysql';
+            } elseif (getenv('DB_HOST')) {
+                $driver = 'mysql';
+            } else {
+                $driver = 'sqlite';
+            }
+        }
+
+        return $driver === 'mysql';
+    }
+
+    private function archiveMysqlDump(): string
+    {
+        $pdo = \App\Core\Database::pdo();
+        $tables = $pdo->query('SHOW TABLES')->fetchAll(\PDO::FETCH_COLUMN);
+
+        $out = "-- Light-commerce backup\n-- Generated: " . date('c') . "\n\nSET FOREIGN_KEY_CHECKS = 0;\n\n";
+        foreach ($tables as $table) {
+            $t = '`' . str_replace('`', '``', (string) $table) . '`';
+            $createStmt = $pdo->query('SHOW CREATE TABLE ' . $t)->fetch(\PDO::FETCH_ASSOC);
+            $createSql = (string) ($createStmt['Create Table'] ?? '');
+            if ($createSql !== '') {
+                $out .= $createSql . ";\n\n";
+            }
+            $rows = $pdo->query('SELECT * FROM ' . $t);
+            $columns = null;
+            while ($row = $rows->fetch(\PDO::FETCH_ASSOC)) {
+                if ($columns === null) {
+                    $columns = array_keys($row);
+                }
+                $vals = [];
+                foreach ($columns as $col) {
+                    $v = $row[$col];
+                    if ($v === null) { $vals[] = 'NULL'; }
+                    elseif (is_bool($v)) { $vals[] = $v ? '1' : '0'; }
+                    elseif (is_int($v) || is_float($v)) { $vals[] = (string) $v; }
+                    else { $vals[] = "'" . str_replace(["\\", "'"], ["\\\\", "''"], (string) $v) . "'"; }
+                }
+                $cols = implode('`, `', $columns);
+                $out .= "INSERT INTO $t (`$cols`) VALUES (" . implode(', ', $vals) . ");\n";
+            }
+            $out .= "\n";
+        }
+        $out .= "SET FOREIGN_KEY_CHECKS = 1;\n";
+        return $out;
+    }
+
     private function relative(string $root, string $path): string
     {
         $root = rtrim(str_replace('\\', '/', $root), '/') . '/';

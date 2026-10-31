@@ -14,6 +14,7 @@ use App\Core\Http\Request;
 use App\Core\Http\Response;
 use App\Core\Http\Router;
 use App\Core\Logger;
+use App\Core\Security\SecurityTemplate as Security;
 
 $request = Request::capture();
 
@@ -27,6 +28,8 @@ header('X-Frame-Options: SAMEORIGIN');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 
 try {
+    // قالب أمني موحّد: تحقق من الطلب + رؤوس أمنية
+    Security::guard($request);
     $router->dispatch($request);
 } catch (HttpError $e) {
     // استجابات المصادقة لا تُخزَّن في أي وسيط

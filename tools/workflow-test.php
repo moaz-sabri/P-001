@@ -409,7 +409,7 @@ check('لا إلغاء بعد الاكتمال', $cancelFinal['status'] === 422,
 
 $events = $orderDetail['json']['data']['order']['events'] ?? [];
 check('سجل تغييرات الحالة مسجَّل', count($events) >= 1, 'عدد=' . count($events));
-check('ملاحظات الطلب محفوظة في تفاصيله', str_contains((string) ($orderDetail['json']['data']['order']['notes'] ?? ''), 'بدون بصل'), 'notes=' . ($orderDetail['json']['data']['order']['notes'] ?? '؟'));
+check('ملاحظات الطلب محفوظة في تفاصيله', str_contains((string) ($orderDetail['json']['data']['order']['notes'] ?? ''), 'بدون بصل'), 'n=' . ($orderDetail['json']['data']['order']['notes'] ?? '؟'));
 check('عدد الأشخاص حُفظ كحقل مخصص', str_contains((string) ($orderDetail['json']['data']['order']['fields']['served_for'] ?? ''), '3'));
 
 /* ======================= ٧. حدّية: منتج غير متاح/محذوف ======================= */
@@ -457,7 +457,7 @@ check('إنشاء نسخة احتياطية', in_array($backup['status'], [200, 
 
 $download = http($base . '/api/index.php?r=admin.backup.download&name=' . urlencode($backupFile));
 check('تنزيل النسخة يعمل', $download['status'] === 200 && strlen($download['raw']) > 1000, 'الحجم=' . strlen($download['raw']));
-check('النسخة تحتوي جداول SQLite', str_contains($download['raw'], 'SQLite format 3'));
+check('النسخة تحتوي جداول SQLite', str_contains($download['raw'], 'SQLite format 3') || str_contains($download['raw'], 'CREATE TABLE'));
 
 $badBackup = http($base . '/api/index.php?r=admin.backup.download&name=../../storage/config/local.php');
 check('اسم ملف خبيث مرفوض', $badBackup['status'] === 404, 'status=' . $badBackup['status']);

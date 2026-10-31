@@ -43,7 +43,8 @@ final class BackupController
             throw new HttpError('not_found', 'ملف النسخة غير موجود.', 404);
         }
         header('Content-Type: application/octet-stream');
-        header('Content-Disposition: attachment; filename="' . $name . '"');
+        $safeName = preg_replace('/[^A-Za-z0-9._-]/', '', basename($name));
+        header('Content-Disposition: attachment; filename="' . $safeName . '"');
         header('Content-Length: ' . strlen($data));
         header('Cache-Control: no-store');
         echo $data;

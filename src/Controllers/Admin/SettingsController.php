@@ -136,7 +136,12 @@ final class SettingsController
 
         // الشعار يُرفع كصورة عادية
         if (!empty($data['logo_path'])) {
-            $pairs['logo_path'] = (string) $data['logo_path'];
+            $logoPath = is_scalar($data['logo_path']) ? trim((string) $data['logo_path']) : '';
+            if ($logoPath !== ''
+                && (str_contains($logoPath, '..') || str_starts_with($logoPath, '/') || !preg_match('#^(?:brand|products|app)/[A-Za-z0-9._-]+\.(?:jpe?g|png|webp|gif)$#i', $logoPath))) {
+                throw new HttpError('invalid_logo_path', 'مسار الشعار غير صالح.', 422);
+            }
+            $pairs['logo_path'] = $logoPath;
         }
 
         if (ProjectConfig::feature('admin_logo')) {

@@ -8,6 +8,65 @@
     return document.getElementById(id);
   };
 
+  function applyFreeBrand(container, store, base) {
+    var company = (store && store.company) || {};
+    var brand = company.brand || {};
+    var about = company.about || {};
+    var contact = company.contact || {};
+    var seo = company.seo || {};
+
+    var logoSrc = brand.logo || "";
+    if (logoSrc && !/^(https?:|data:|\/)/.test(logoSrc)) {
+      logoSrc = base + "app/uploads/" + logoSrc.replace(/^\.?\//, "");
+    }
+
+    container.querySelectorAll("[data-brand]").forEach(function (el) {
+      var key = el.getAttribute("data-brand");
+
+      if (key === "logo") {
+        if (logoSrc) {
+          el.src = logoSrc;
+          el.alt = brand.name || "";
+          el.hidden = false;
+        } else {
+          el.hidden = true;
+        }
+        return;
+      }
+
+      if (key === "working_hours") {
+        var hours = contact.working_hours || [];
+        var rows = hours
+          .map(function (h) {
+            var open =
+              h.open && h.close ? h.open + " — " + h.close : "مغلق";
+            return (
+              "<tr><td>" +
+              (UI ? UI.escape(h.day || "") : h.day || "") +
+              "</td><td>" +
+              (UI ? UI.escape(open) : open) +
+              "</td></tr>"
+            );
+          })
+          .join("");
+        el.innerHTML = rows || "<tr><td colspan='2'>—</td></tr>";
+        return;
+      }
+
+      var value = null;
+      if (key === "name") value = brand.name;
+      else if (key === "tagline") value = brand.tagline || about.summary;
+      else if (key === "summary") value = about.summary;
+      else if (key === "title") value = seo.title || brand.name;
+      else if (Object.prototype.hasOwnProperty.call(contact, key))
+        value = contact[key];
+
+      if (value !== null && value !== undefined) {
+        el.textContent = String(value);
+      }
+    });
+  }
+
   /* أيقونات الرسائل — SVG مضمّن لتجنّب أي طلب شبكة إضافي */
   var TOAST_ICONS = {
     success:
@@ -535,7 +594,7 @@
        كل حقل فارغ في الملف يعني: لا تُرسم هذه القطعة أصلًا.
        ================================================================== */
 
-    renderHome: function () {
+    renderHomeClassic: function () {
       var store = global.App.Store;
       var company = store.company || {};
       var brand = company.brand || {};
@@ -957,11 +1016,37 @@
       }
     },
 
+    renderHome: function () {
+      var store = global.App.Store || {};
+      var base =
+        (global.APP_CONFIG && global.APP_CONFIG.base) || "/";
+      var container = $("view-home");
+      if (!container) {
+        UI.renderHomeClassic();
+        return;
+      }
+      fetch(base + "app/pages/landing.html", { cache: "no-store" })
+        .then(function (res) {
+          return res.ok ? res.text() : null;
+        })
+        .then(function (html) {
+          if (!html) {
+            UI.renderHomeClassic();
+            return;
+          }
+          container.innerHTML = html;
+          applyFreeBrand(container, store, base);
+        })
+        .catch(function () {
+          UI.renderHomeClassic();
+        });
+    },
+
     /* ==================================================================
        صفحة التواصل — نفس المصدر، لكن بعرض أعمق
        ================================================================== */
 
-    renderContact: function () {
+    renderContactClassic: function () {
       var company = global.App.Store.company || {};
       var contact = company.contact || {};
       var brand = company.brand || {};
@@ -1042,6 +1127,50 @@
         UI.setHidden($("contact-address"), true);
       }
     },
+
+    renderContact: function () {
+      var store = global.App.Store || {};
+      var base = (global.APP_CONFIG && global.APP_CONFIG.base) || "/";
+      var container = $("view-contact");
+      if (!container) {
+        UI.renderContactClassic();
+        return;
+      }
+      fetch(base + "app/pages/contact.html", { cache: "no-store" })
+        .then(function (res) {
+          return res.ok ? res.text() : null;
+        })
+        .then(function (html) {
+          if (!html) {
+            UI.renderContactClassic();
+            return;
+          }
+          container.innerHTML = html;
+          applyFreeBrand(container, store, base);
+        })
+        .catch(function () {
+          UI.renderContactClassic();
+        });
+    },
+
+    renderPrivacy: function () {
+      var store = global.App.Store || {};
+      var base = (global.APP_CONFIG && global.APP_CONFIG.base) || "/";
+      var container = $("view-privacy");
+      if (!container) return;
+      fetch(base + "app/pages/privacy.html", { cache: "no-store" })
+        .then(function (res) {
+          return res.ok ? res.text() : null;
+        })
+        .then(function (html) {
+          if (html) {
+            container.innerHTML = html;
+            applyFreeBrand(container, store, base);
+          }
+        })
+        .catch(function () {});
+    },
+
     renderLocationChip: function (location, config) {
       var chip = $("loc-chip");
       var text = $("loc-chip-text");

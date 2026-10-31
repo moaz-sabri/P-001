@@ -34,6 +34,7 @@
     "products",
     "product",
     "contact",
+    "privacy",
     "cart",
     "checkout",
     "success",
@@ -48,6 +49,7 @@
     products: "المنتجات",
     product: null,
     contact: "تواصل معنا",
+    privacy: "سياسة الخصوصية",
     cart: "السلة",
     checkout: "إتمام الطلب",
     success: function () {
@@ -201,6 +203,10 @@
       case "about":
         return show("contact");
 
+      case "privacy":
+      case "policy":
+        return show("privacy");
+
       /* شاشات الطلبات: موجودة فقط في وضع الطلبات */
       case "cart":
       case "checkout":
@@ -289,6 +295,7 @@
 
     if (name === "home") UI.renderHome();
     if (name === "contact") UI.renderContact();
+    if (name === "privacy") UI.renderPrivacy();
     if (name === "products") renderMenu();
     if (name === "product") loadProductPage();
     if (name === "cart") UI.renderCart();
@@ -404,6 +411,7 @@
     applyMode();
     if (state.view === "home") UI.renderHome();
     if (state.view === "contact") UI.renderContact();
+    if (state.view === "privacy") UI.renderPrivacy();
     if (state.view === "products") renderMenu();
   }
 

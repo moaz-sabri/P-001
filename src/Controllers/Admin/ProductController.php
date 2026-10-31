@@ -206,6 +206,19 @@ final class ProductController
             $extra['gallery'] = array_values(array_unique($gallery));
         }
 
+        // Validate image_path: only safe relative paths or empty.
+        $rawImagePath = $data['image_path'] ?? null;
+        if ($rawImagePath === null) {
+            unset($out['image_path']);
+        } else {
+            $imagePath = is_scalar($rawImagePath) ? trim((string) $rawImagePath) : '';
+            if ($imagePath !== ''
+                && (str_contains($imagePath, '..') || str_starts_with($imagePath, '/') || !preg_match('#^[A-Za-z0-9_./-]+\.(?:jpe?g|png|webp|gif)$#i', $imagePath))) {
+                throw new HttpError('invalid_image_path', 'مسار الصورة غير صالح.', 422);
+            }
+            $out['image_path'] = $imagePath;
+        }
+
         $out['extra'] = $extra;
         return $out;
     }
