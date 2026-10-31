@@ -1749,7 +1749,7 @@
       '</div>';
 
     var effect = function (text) {
-      return '<p class="field-effect">' + escapeHtml(text) + '</p>';
+      return '<p class="field-effect">يُطبَّق هذا الإعداد فور الحفظ.</p>';
     };
 
     function f(id, label, control, whereWhy, full) {
@@ -1770,31 +1770,31 @@
         '<p class="field-hint">تُعرض في رأس الموقع واسم التبويب وبطاقة المعاينة. تُستخدم كـ fallback إذا كان company.json فارغًا.</p></div>' +
       f('s-name', 'اسم النشاط',
         '<input id="s-name" value="' + escapeHtml(s.app_name || '') + '" maxlength="80">',
-        'أين: رأس الموقع، document.title، معاينة البطاقة، fallback عنوان الغلاف. لماذا: تعريف brand.name when company.json name فارغ.') +
+        '') +
       f('s-tagline', 'وصف قصير',
         '<input id="s-tagline" value="' + escapeHtml(s.app_tagline || '') + '" maxlength="160">',
-        'أين: نص brand.tagline تحت الاسم. لماذا: subtitle/replacement when company.json tagline فارغ.') +
+        '') +
       f('s-logo', 'الشعار',
         '<input type="file" id="s-logo" accept="image/png,image/jpeg,image/webp,image/gif">' +
         (s.logo_path ? '<div class="field-hint">الشعار الحالي: ' + escapeHtml(s.logo_path) + '</div>' : ''),
-        'أين: رأس + غلاف (hero-logo) و brand-preview. لماذا: logo path from runtime when company brand.logo فارغ; رفع يحذف القديم.') +
+        '') +
       f('s-phone', 'هاتف التواصل',
         '<input id="s-phone" value="' + escapeHtml(s.contact_phone || '') + '" maxlength="30">',
-        'أين: contact.phone و ways فوتر. لماذا: fallback when company contact.phone فارغ.') +
+        '') +
       f('s-instagram', 'إنستغرام',
         '<input id="s-instagram" value="' + escapeHtml(s.contact_instagram || '') + '" maxlength="60">',
-        'أين: contact.instagram و ways. لماذا: fallback when company contact.instagram فارغ.') +
+        '') +
 
       /* ===== нذة/ترحيب ===== */
       '<div class="field full"><h4 class="section-title bordered">2. النبذة والترحيب والتواصل</h4>' +
         '<p class="field-hint">النبذة الإدارية تتقدّم على company.json (لتفعيل تعديلها فورًا).</p></div>' +
       f('s-about', 'نبذة الصفحة الرئيسية', 
         '<textarea id="s-about" maxlength="1200" placeholder="سطران يصفان نشاطك: ماذا تقدّم ولمن.">' + escapeHtml(s.about_summary || '') + '</textarea>',
-        'أين: about.summary (UI hero text uses about.summary). لماذا: admin value overrides company summary (highest priority).', true) +
+        '', true) +
       '<div class="field-hint full">تظهر أسفل الشعار واسم المشروع. اتركها فارغة لاعتماد company.json.</div>' +
       f('s-welcome', 'رسالة الترحيب',
         '<textarea id="s-welcome" maxlength="500">' + escapeHtml(s.welcome_message || '') + '</textarea>',
-        'أين: #welcome-notice. لماذا: يظهر عند تفعيل show_welcome.', true) +
+        '', true) +
 
       /* ===== الصفحة الرئيسية ===== */
       '<div class="field full"><h4 class="section-title bordered">3. الصفحة الرئيسية (Hero)</h4>' +
@@ -1807,7 +1807,7 @@
           ['cover', 'غلاف كامل — الصورة خلف النص'],
           ['spotlight', 'مركّز — شعار ونص في الوسط'],
         ]),
-        'أين: class hero--{layout}. لماذا: controls hero visual structure.') +
+        '') +
       f('s-home-height', 'ارتفاع الغلاف',
         selectField('s-home-height', s.home_height, [
           ['', 'ورّث من الملف'],
@@ -1815,35 +1815,35 @@
           ['large', 'كبير'],
           ['full', 'كامل الشاشة'],
         ]),
-        'أين: class hero--{height}. لماذا: vertical size of hero.') +
+        '') +
       f('s-hero', 'صورة الغلاف',
         '<input type="file" id="s-hero" accept="image/png,image/jpeg,image/webp,image/gif">' +
         (s.hero_image_url
           ? '<div class="field-hint">الصورة الحالية: ' + escapeHtml(s.hero_image_path || '') + '</div>' +
             '<label class="check-inline"><input type="checkbox" id="s-hero-remove"> إزالة الصورة الحالية</label>'
           : ''),
-        'أين: brand.hero_image/cover_image (fallback). لماذا: db path prioritized when file blank; removal deletes file.', true) +
+        '', true) +
       f('s-home-eyebrow', 'النص العلوي (eyebrow)',
         '<input id="s-home-eyebrow" value="' + escapeHtml(s.home_hero_eyebrow || '') + '" maxlength="120" placeholder="مثال: منذ 2015">',
-        'أين: hero eyebrow || brand.tagline. لماذا: overrides top text of hero.') +
+        '') +
       f('s-home-title', 'عنوان الغلاف',
         '<input id="s-home-title" value="' + escapeHtml(s.home_hero_title || '') + '" maxlength="120" placeholder="اتركه فارغًا للنمط أو اسم النشاط">',
-        'أين: hero title || config.home_hero_title || brand.name || app_name. لماذا: overrides main hero title.') +
+        '') +
       f('s-home-text', 'نص الغلاف',
         '<textarea id="s-home-text" maxlength="1200" placeholder="اتركه فارغًا لاعتماد نبذة الصفحة الرئيسية.">' + escapeHtml(s.home_hero_text || '') + '</textarea>',
-        'أين: نص الغلاف || نبذة. لماذا: تجاوز نص الغلاف.', true) +
+        '', true) +
       f('s-home-primary-label', 'الزر الأساسي — النص',
         '<input id="s-home-primary-label" value="' + escapeHtml(s.home_primary_label || '') + '" maxlength="60" placeholder="تصفّح المنتجات">',
-        'أين: hero-cta text (fallback catalogCta). لماذا: custom primary CTA label.') +
+        '') +
       f('s-home-primary-url', 'الزر الأساسي — الرابط',
         '<input id="s-home-primary-url" value="' + escapeHtml(s.home_primary_url || '') + '" maxlength="300" placeholder="products أو https://…">',
-        'أين: hero-cta href/data-go. لماذا: custom destination (validated).') +
+        '') +
       f('s-home-secondary-label', 'الزر الثانوي — النص',
         '<input id="s-home-secondary-label" value="' + escapeHtml(s.home_secondary_label || '') + '" maxlength="60" placeholder="تواصل معنا">',
-        'أين: hero-cta-2 text (fallback order/contact). لماذا: custom secondary CTA label.') +
+        '') +
       f('s-home-secondary-url', 'الزر الثانوي — الرابط',
         '<input id="s-home-secondary-url" value="' + escapeHtml(s.home_secondary_url || '') + '" maxlength="300" placeholder="contact أو https://…">',
-        'أين: hero-cta-2 href/data-go. لماذا: custom destination (validated).') +
+        '') +
 
       /* ===== عناصر الصفحة ===== */
       '<div class="field full"><h4 class="section-title bordered">4. عناصر الصفحة الرئيسية (إظهار/إخفاء)</h4>' +
@@ -1863,13 +1863,13 @@
       '<div class="field full"><h4 class="section-title bordered">5. خيارات العرض (Global toggles)</h4>' +
         '<p class="field-hint">تؤثر على سلوك الواجهة. کل خيار bool persisted.</p></div>' +
       toggle('s-show-welcome', 'إظهار صفحة الترحيب', s.show_welcome) +
-      effect('أين: رسالة الترحيب. لماذا: ظهور welcome_message.') +
+      effect('') +
       toggle('s-show-search', 'إظهار البحث', s.show_search) +
-      effect('أين: البحث في الرأس. لماذا: إظهار/إخفاء.') +
+      effect('') +
       toggle('s-show-contact', 'إظهار بيانات التواصل', s.show_contact) +
-      effect('أين: footer contact. لماذا: ways (حتى 3).') +
+      effect('') +
       toggle('s-show-prices', 'إظهار الأسعار', s.show_prices) +
-      effect('أين: بطاقات المنتجات. لماذا: إخفاء الأسعار.', true) +
+      effect('', true) +
 
       '<div class="form-actions full">' +
         '<button class="btn btn-primary" type="submit">حفظ الإعدادات</button>' +
