@@ -13,6 +13,7 @@ final class Request
     private array $body;
     private array $files;
     private array $server;
+    private ?string $rawBodyCache = null;
 
     public function __construct(array $query, array $body, array $files, array $server)
     {
@@ -80,14 +81,10 @@ final class Request
 
     private function rawBody(): string
     {
-        // static داخل دالة = متغيّر واحد لكل العملية لا لكل كائن. تحت
-        // PHP-FPM كل طلب عملية جديدة فلا أثر، لكن أي سياق دائم (RoadRunner)
-        // أو سكربت ينشئ كائنَي Request يحصل على جسم الطلب الأول دائمًا.
-        static $cached = null;
-        if ($cached === null) {
-            $cached = file_get_contents('php://input') ?: '';
+        if ($this->rawBodyCache === null) {
+            $this->rawBodyCache = file_get_contents('php://input') ?: '';
         }
-        return $cached;
+        return $this->rawBodyCache;
     }
 
     public function header(string $name, ?string $default = null): ?string

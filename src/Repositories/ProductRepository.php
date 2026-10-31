@@ -37,7 +37,7 @@ final class ProductRepository
                        p.category_id, p.is_available, p.is_featured, p.sort_order, c.name AS category_name
                 FROM products p
                 LEFT JOIN categories c ON c.id = p.category_id
-                WHERE p.is_available = 1 AND (c.is_active = 1 OR p.category_id IS NULL)';
+                WHERE p.is_available = 1 AND (c.is_active = 1 OR p.category_id IS NULL OR c.id IS NULL)';
 
         $params = [];
         if ($categoryCode !== null && $categoryCode !== '') {

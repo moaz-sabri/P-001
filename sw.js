@@ -9,7 +9,7 @@
    - لا يوجد طابور إرسال: الطلب دون اتصال لا يُرسل ولا يُؤجَّل.
    ========================================================================== */
 
-const VERSION = 'v1.6.2';
+const VERSION = 'v1.6.3';
 const SHELL_CACHE = `lc-shell-${VERSION}`;
 const DATA_CACHE = `lc-data-${VERSION}`;
 
@@ -130,9 +130,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // بيانات الكتالوج: تُخزَّن للعمل دون اتصال
+  // بيانات الكتالوج: الشبكة أولًا (لعرض أحدث المنتجات فورًا) مع الرجوع إلى
+  // الكاش عند غياب الاتصال — حتى لا تبقى منتجات قديمة/فارغة على الشاشة.
   if (route === 'catalog.snapshot' || route === 'product.get' || route === 'locations.list') {
-    event.respondWith(staleWhileRevalidate(request, DATA_CACHE));
+    event.respondWith(networkFirst(request, DATA_CACHE));
   }
 });
 
@@ -164,6 +165,29 @@ async function cacheFirst(request, cacheName) {
     return response;
   } catch (error) {
     return new Response('', { status: 504, statusText: 'Offline' });
+  }
+}
+
+/**
+ * شبكة أولًا (network-first): يُطلب من الخادم أحدث البيانات (المنتجات) فورًا،
+ * ويُخزَّن النجاح في الكاش. عند غياب الاتصال (أو فشل الطلب) يُستخدم الكاش
+ * المحفوظ للعمل دون اتصال. هذا يمنع بقاء نسخة قديمة/فارغة على الشاشة.
+ */
+async function networkFirst(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    return new Response(
+      JSON.stringify({ ok: false, error: { code: 'offline', message: 'لا يوجد اتصال' } }),
+      { status: 503, headers: { 'Content-Type': 'application/json; charset=utf-8' } }
+    );
   }
 }
 

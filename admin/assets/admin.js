@@ -2145,7 +2145,8 @@
             "الحالة",
             "غير مهيأة — بانتظار أول بناء",
           );
-          $("instance-destroy").disabled = true;
+          var destroyBtn = $("instance-destroy");
+          if (destroyBtn) destroyBtn.disabled = true;
           return;
         }
 
@@ -2282,6 +2283,7 @@
   /** يضبط زر النافذة لمهمة واحدة مع إعادة الحالة الأصلية عند الفتح. */
   function wireModalButton(label, className, handler) {
     var btn = $("modal-save");
+    if (!btn) return;
     btn.className = className;
     btn.textContent = label;
     btn.disabled = false;
@@ -2429,10 +2431,12 @@
      * لونها الأحمر واسمها «تدمير نهائي» كانا سيبقيان.
      */
     var save = $("modal-save");
-    save.onclick = null;
-    save.className = "btn btn-primary";
-    save.disabled = false;
-    save.textContent = "حفظ";
+    if (save) {
+      save.onclick = null;
+      save.className = "btn btn-primary";
+      save.disabled = false;
+      save.textContent = "حفظ";
+    }
 
     $("modal-backdrop").hidden = false;
     var first = $("modal-form").querySelector("input, select, textarea");

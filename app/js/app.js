@@ -364,6 +364,7 @@
       .then(function (data) {
         Store.setSnapshot(data);
         applySnapshot();
+        if (state.view === "home" && UI.renderHomeProducts) UI.renderHomeProducts();
       })
       .catch(function (error) {
         // لا يوجد اتصال؟ نعرض النسخة المحفوظة إن وُجدت (readme §11)

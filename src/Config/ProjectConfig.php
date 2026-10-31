@@ -91,7 +91,7 @@ final class ProjectConfig
      * ===================================================================== */
 
     /** رقم إصدار القالب (دلالي). */
-    public const VERSION = '1.6.2';
+    public const VERSION = '1.6.3';
 
     /** تاريخ اعتماد هذه النسخة. */
     public const RELEASED_AT = '2026-10-19';

@@ -23,7 +23,7 @@ final class CatalogController
             'data' => $payload,
             'meta' => ['generated_at' => date('c')],
         ], 200, [
-            'Cache-Control' => 'public, max-age=60, stale-while-revalidate=86400',
+            'Cache-Control' => 'public, max-age=0, must-revalidate',
         ]);
     }
 
