@@ -127,6 +127,15 @@
       .replace(/'/g, "&#39;");
   }
 
+  /* إعدادات التشغيل تُخزن as نصوص '0'/'1' (comme RuntimeSettings (PHP)).
+     JavaScript يتعامل مع '0' كقيمة truthy، فتظهر المفاتيح معطلة على she تشغيلها.
+     هذه الدالة توحّد التحقق مع toBool في الخادم. */
+  function isTruthySetting(value) {
+    if (value === true || value === 1) return true;
+    if (value === false || value === 0 || value === null || value === undefined) return false;
+    return /^(1|true|on|yes|نعم)$/i.test(String(value).trim());
+  }
+
   function money(minor) {
     var cfg = state.config || {};
     var n = Number(minor || 0);
@@ -882,7 +891,7 @@
         '"></div>' +
         '<div class="field"><label>الحالة</label><label class="switch">' +
         '<input type="checkbox" id="f-active"' +
-        (cat && cat.is_active ? " checked" : !cat ? " checked" : "") +
+        (isTruthySetting(cat && cat.is_active) || !cat ? " checked" : "") +
         ">" +
         '<span class="switch-track"></span> مفعّل</label></div>' +
         "</div>",
@@ -1109,7 +1118,7 @@
             '<div class="field"><label class="switch"><input type="checkbox" data-extra="' +
             escapeHtml(field.key) +
             '"' +
-            (value ? " checked" : "") +
+            (isTruthySetting(value) ? " checked" : "") +
             '><span class="switch-track"></span> ' +
             escapeHtml(field.label) +
             "</label></div>"
@@ -1265,11 +1274,11 @@
         "</div>" +
         '<div class="field"><label>الحالة</label>' +
         '<label class="switch"><input type="checkbox" id="p-available"' +
-        (product && !product.available ? "" : " checked") +
+        (product && !isTruthySetting(product.available) ? "" : " checked") +
         ">" +
         '<span class="switch-track"></span> متاح للطلب</label>' +
         '<label class="switch mt-sm"><input type="checkbox" id="p-featured"' +
-        (product && product.featured ? " checked" : "") +
+        (product && isTruthySetting(product.featured) ? " checked" : "") +
         ">" +
         '<span class="switch-track"></span> مميّز</label>' +
         "</div>" +
@@ -1545,7 +1554,7 @@
         escapeHtml(location ? location.note : "") +
         '" maxlength="200"></div>' +
         '<div class="field"><label class="switch"><input type="checkbox" id="l-active"' +
-        (location && !location.active ? "" : " checked") +
+        (location && !isTruthySetting(location.active) ? "" : " checked") +
         '><span class="switch-track"></span> نشط</label>' +
         '<div class="field-hint">الموقع غير النشط لا يظهر للزبائن، ويرفض الخادم الطلبات عليه.</div></div>',
       function () {
@@ -1922,7 +1931,7 @@
         '<label class="switch me-lg"><input type="checkbox" id="' +
         id +
         '"' +
-        (checked ? " checked" : "") +
+        (isTruthySetting(checked) ? " checked" : "") +
         '><span class="switch-track"></span> ' +
         label +
         "</label>"
