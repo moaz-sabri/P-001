@@ -45,8 +45,15 @@ final class ProductRepository
             $params['cat'] = (int) $categoryCode;
         }
         if ($search !== null && trim($search) !== '') {
-            $sql .= ' AND (p.name LIKE :q OR p.description LIKE :q OR p.extra_json LIKE :q)';
-            $params['q'] = '%' . trim($search) . '%';
+            /*
+             * MySQL مع ATTR_EMULATE_PREPARES=false لا يسمح بإعادة استخدام
+             * نفس العلامة الاسمية، لذلك نستخدم علامة مستقلة لكل عمود.
+             */
+            $sql .= ' AND (p.name LIKE :q_name OR p.description LIKE :q_desc OR p.extra_json LIKE :q_extra)';
+            $like = '%' . trim($search) . '%';
+            $params['q_name']  = $like;
+            $params['q_desc']  = $like;
+            $params['q_extra'] = $like;
         }
         $sql .= ' ORDER BY c.sort_order ASC, p.sort_order ASC, p.id ASC LIMIT ' . ProjectConfig::CATALOG_PAGE_SIZE;
 

@@ -36,6 +36,18 @@
 
 ---
 
+## [1.6.2] — 2026-10-31 · إصلاح عرض المنتجات في الصفحة الرئيسية وبحث MySQL
+
+### مُصلَح
+- **البحث في الكتالوج**: إعادة استخدام علامة `:q` ثلاث مرات مع `ATTR_EMULATE_PREPARES=false` على MySQL
+  caused `SQLSTATE[HY093]`; now uses `:q_name`, `:q_desc`, `:q_extra`.
+- **الصفحة الرئيسية**: لم تعد تُستبدل بالصفحة الحرة (landing.html) التي تتجاهل إعدادات الإدارة
+  و`company.json`؛ تُبنى الآن من `renderHomeClassic` وتعرض مقتطفًا للمنتجات
+  (المميّزة أولًا ثم الباقي، حتى 6).
+- **صفحة التواصل**: استعادة العرض الكلاسيكي (بيانات company.json) بدل fragment with placeholder.
+- **سياسة الخصوصية**: removed the "free page" placeholder sentence.
+- bumped cache version to 1.6.2.
+
 ## [1.6.1] — 2026-10-19 · إصلاح تغيير كلمة المرور وحفظ الإعدادات
 
 ### مُصلَح

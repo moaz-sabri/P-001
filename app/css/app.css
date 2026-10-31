@@ -1563,6 +1563,26 @@ body.offline .app-header { padding-block-start: calc(34px + env(safe-area-inset-
 .home-block { margin-bottom: 28px; }
 .home-block > .section-heading { margin-bottom: 14px; }
 
+.home-block-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.home-block-head .section-heading { margin-bottom: 0; }
+
+.home-block-link {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.home-block-link:hover { text-decoration: underline; }
+
 .testimonial-grid {
   display: grid;
   gap: 12px;

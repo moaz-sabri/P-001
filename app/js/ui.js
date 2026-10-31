@@ -8,6 +8,9 @@
     return document.getElementById(id);
   };
 
+  /* عدد المنتجات المعروضة في مقتطف الصفحة الرئيسية. */
+  var HOME_PRODUCTS_LIMIT = 6;
+
   function applyFreeBrand(container, store, base) {
     var company = (store && store.company) || {};
     var brand = company.brand || {};
@@ -361,6 +364,98 @@
       !!contact.map_url,
     );
     return ways;
+  }
+
+  /**
+   * بطاقة منتج واحدة: تُستخدم في صفحة المنتجات وفي مقتطف الصفحة الرئيسية،
+   * حتى يبقى شكل البطاقة وسلوك فتحها واحدًا في المكانين.
+   */
+  function productCard(product, store) {
+    var tags = (product.tags || [])
+      .map(function (tag) {
+        return (
+          '<span class="badge ' +
+          (tag.kind === "flag" ? "flag" : "") +
+          '">' +
+          UI.escape(tag.label) +
+          "</span>"
+        );
+      })
+      .join("");
+
+    var soldBadge =
+      product.available === false
+        ? '<span class="badge sold">غير متوفر</span>'
+        : "";
+    var quantity = store ? store.quantityOf(product.id) : 0;
+    var ordering = store ? store.hasOrdering() : false;
+
+    var media = product.image
+      ? '<img src="' +
+        UI.escape(product.image) +
+        '" alt="' +
+        UI.escape(product.name) +
+        '" loading="lazy" decoding="async">'
+      : '<div class="placeholder" aria-hidden="true">&#10022;</div>';
+
+    var desc = product.description
+      ? '<p class="card-desc">' + UI.escape(product.description) + "</p>"
+      : "";
+
+    var priceLabel =
+      store && store.settings.show_prices === false
+        ? ""
+        : '<span class="card-price">' + UI.escape(product.price) + "</span>";
+
+    /*
+     * وضع العرض فقط: لا زر إضافة. البطاقة معرض يُستعرض، والسعر يبقى
+     * معروضًا لأنه جزء من تعريف المنتج لا من مسار الشراء.
+     */
+    var addButton = "";
+    if (ordering && product.available !== false) {
+      addButton =
+        '<button class="card-add' +
+        (quantity ? " added" : "") +
+        '" data-add="' +
+        product.id +
+        '" aria-label="' +
+        (quantity ? "في السلة: " + quantity + " — إضافة " : "إضافة ") +
+        UI.escape(product.name) +
+        '">' +
+        (quantity ? quantity : "+") +
+        "</button>";
+    }
+
+    /*
+     * كل بطاقة تُفتح: الضغط عليها يعرض نافذة منبثقة متوسطة بالتفاصيل،
+     * وإن كان للمنتج نص طويل يُفتح من داخلها رابط إلى صفحة منفردة أكبر.
+     */
+    return (
+      '<article class="product-card' +
+      (product.available === false ? " is-out" : "") +
+      ' is-openable"' +
+      ' data-detail="' +
+      product.id +
+      '" role="button" tabindex="0">' +
+      '<div class="card-media">' +
+      media +
+      '<div class="card-badges">' +
+      tags +
+      soldBadge +
+      "</div>" +
+      "</div>" +
+      '<div class="card-body">' +
+      '<h3 class="card-name">' +
+      UI.escape(product.name) +
+      "</h3>" +
+      desc +
+      '<div class="card-foot">' +
+      priceLabel +
+      addButton +
+      "</div>" +
+      "</div>" +
+      "</article>"
+    );
   }
 
   var TOAST_DURATION = { success: 2600, info: 3000, warn: 3800, error: 4600 };
@@ -1014,32 +1109,67 @@
       } else {
         UI.setHidden(glance, true);
       }
+
+      /* --- مقتطف المنتجات: المميّزة أولًا ثم بقية الكتالوج --- */
+      UI.renderHomeProducts();
     },
 
-    renderHome: function () {
+    /**
+     * مقتطف المنتجات في الصفحة الرئيسية.
+     * يظهر فقط عندما يصل الكتالوج فعليًا من الخادم، فلا تُرسم شبكة فارغة
+     * أثناء التحميل. المنتجات المميّزة تتقدّم، والباقي يحافظ على ترتيبه.
+     */
+    renderHomeProducts: function () {
+      var box = $("home-products");
+      if (!box) return;
+
       var store = global.App.Store || {};
-      var base =
-        (global.APP_CONFIG && global.APP_CONFIG.base) || "/";
-      var container = $("view-home");
-      if (!container) {
-        UI.renderHomeClassic();
+      var products =
+        (store.snapshot && store.snapshot.products) || [];
+
+      if (!products.length) {
+        UI.setHidden(box, true);
         return;
       }
-      fetch(base + "app/pages/landing.html", { cache: "no-store" })
-        .then(function (res) {
-          return res.ok ? res.text() : null;
+
+      var featured = products.filter(function (product) {
+        return product.featured;
+      });
+      var rest = products.filter(function (product) {
+        return !product.featured;
+      });
+      var shown = featured.concat(rest).slice(0, HOME_PRODUCTS_LIMIT);
+
+      var home = (store.company && store.company.home) || {};
+      var title = $("home-products-title");
+      if (title) {
+        title.textContent =
+          home.products_title ||
+          "أحدث " +
+            (store.productPlural ? store.productPlural() : "المنتجات");
+      }
+
+      var all = $("home-products-all");
+      if (all) {
+        all.href =
+          global.App.Router && global.App.Router.href
+            ? global.App.Router.href("products")
+            : "#";
+        all.setAttribute("data-go", "products");
+      }
+
+      $("home-product-grid").innerHTML = shown
+        .map(function (product) {
+          return productCard(product, store);
         })
-        .then(function (html) {
-          if (!html) {
-            UI.renderHomeClassic();
-            return;
-          }
-          container.innerHTML = html;
-          applyFreeBrand(container, store, base);
-        })
-        .catch(function () {
-          UI.renderHomeClassic();
-        });
+        .join("");
+
+      UI.setHidden(box, false);
+    },
+
+    /* الصفحة الرئيسية الرسمية: تُبنى من company.json وإعدادات الإدارة. */
+    renderHome: function () {
+      UI.renderHomeClassic();
     },
 
     /* ==================================================================
@@ -1128,29 +1258,9 @@
       }
     },
 
+    /* صفحة التواصل الرسمية: نفس مصدر company.json وإعدادات الإدارة. */
     renderContact: function () {
-      var store = global.App.Store || {};
-      var base = (global.APP_CONFIG && global.APP_CONFIG.base) || "/";
-      var container = $("view-contact");
-      if (!container) {
-        UI.renderContactClassic();
-        return;
-      }
-      fetch(base + "app/pages/contact.html", { cache: "no-store" })
-        .then(function (res) {
-          return res.ok ? res.text() : null;
-        })
-        .then(function (html) {
-          if (!html) {
-            UI.renderContactClassic();
-            return;
-          }
-          container.innerHTML = html;
-          applyFreeBrand(container, store, base);
-        })
-        .catch(function () {
-          UI.renderContactClassic();
-        });
+      UI.renderContactClassic();
     },
 
     renderPrivacy: function () {
@@ -1269,7 +1379,6 @@
       UI.applyLayout();
 
       var store = global.App.Store;
-      var ordering = store.hasOrdering();
       var plural = store.productPlural();
 
       if (!products.length) {
@@ -1295,92 +1404,7 @@
 
       grid.innerHTML = products
         .map(function (product) {
-          var tags = (product.tags || [])
-            .map(function (tag) {
-              return (
-                '<span class="badge ' +
-                (tag.kind === "flag" ? "flag" : "") +
-                '">' +
-                UI.escape(tag.label) +
-                "</span>"
-              );
-            })
-            .join("");
-
-          var soldBadge =
-            product.available === false
-              ? '<span class="badge sold">غير متوفر</span>'
-              : "";
-          var quantity = store.quantityOf(product.id);
-
-          var media = product.image
-            ? '<img src="' +
-              UI.escape(product.image) +
-              '" alt="' +
-              UI.escape(product.name) +
-              '" loading="lazy" decoding="async">'
-            : '<div class="placeholder" aria-hidden="true">&#10022;</div>';
-
-          var desc = product.description
-            ? '<p class="card-desc">' + UI.escape(product.description) + "</p>"
-            : "";
-
-          var priceLabel =
-            store.settings.show_prices === false
-              ? ""
-              : '<span class="card-price">' +
-                UI.escape(product.price) +
-                "</span>";
-
-          /*
-           * وضع العرض فقط: لا زر إضافة. البطاقة معرض يُستعرض، والسعر يبقى
-           * معروضًا لأنه جزء من تعريف المنتج لا من مسار الشراء.
-           */
-          var addButton = "";
-          if (ordering && product.available !== false) {
-            addButton =
-              '<button class="card-add' +
-              (quantity ? " added" : "") +
-              '" data-add="' +
-              product.id +
-              '" aria-label="' +
-              (quantity ? "في السلة: " + quantity + " — إضافة " : "إضافة ") +
-              UI.escape(product.name) +
-              '">' +
-              (quantity ? quantity : "+") +
-              "</button>";
-          }
-
-          /*
-           * كل بطاقة تُفتح: الضغط عليها يعرض نافذة منبثقة متوسطة بالتفاصيل،
-           * وإن كان للمنتج نص طويل يُفتح من داخلها رابط إلى صفحة منفردة أكبر.
-           */
-          return (
-            '<article class="product-card' +
-            (product.available === false ? " is-out" : "") +
-            ' is-openable"' +
-            ' data-detail="' +
-            product.id +
-            '" role="button" tabindex="0">' +
-            '<div class="card-media">' +
-            media +
-            '<div class="card-badges">' +
-            tags +
-            soldBadge +
-            "</div>" +
-            "</div>" +
-            '<div class="card-body">' +
-            '<h3 class="card-name">' +
-            UI.escape(product.name) +
-            "</h3>" +
-            desc +
-            '<div class="card-foot">' +
-            priceLabel +
-            addButton +
-            "</div>" +
-            "</div>" +
-            "</article>"
-          );
+          return productCard(product, store);
         })
         .join("");
     },
