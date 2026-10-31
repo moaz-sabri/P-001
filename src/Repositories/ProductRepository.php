@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Config\ProjectConfig;
+use App\Core\Cache;
 use App\Core\Database;
 use App\Core\Money;
 
@@ -70,7 +71,7 @@ final class ProductRepository
 
     public function create(array $data): int
     {
-        return Database::insert('products', [
+        $id = Database::insert('products', [
             'category_id'  => (int) ($data['category_id'] ?? 0) ?: null,
             'name'         => (string) ($data['name'] ?? ''),
             'description'  => $data['description'] ?? '',
@@ -83,6 +84,8 @@ final class ProductRepository
             'created_at'   => Database::now(),
             'updated_at'   => Database::now(),
         ]);
+        Cache::flush();
+        return $id;
     }
 
     public function update(int $id, array $data): void
@@ -99,11 +102,13 @@ final class ProductRepository
             'sort_order'   => (int) ($data['sort_order'] ?? 0),
             'updated_at'   => date('Y-m-d H:i:s'),
         ], 'id = :id', ['id' => $id]);
+        Cache::flush();
     }
 
     public function delete(int $id): void
     {
         Database::delete('products', 'id = :id', ['id' => $id]);
+        Cache::flush();
     }
 
     /* ------------------------------------------------------------------ */

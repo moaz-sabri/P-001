@@ -123,7 +123,11 @@ final class BackupService
                 @unlink($f);
             }
         }
-        return copy($path, $dbPath);
+        $ok = copy($path, $dbPath);
+        if ($ok) {
+            \App\Core\Cache::flush();
+        }
+        return $ok;
     }
 
     /**

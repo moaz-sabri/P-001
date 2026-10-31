@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>القالب التجاري الخفيف — الوثائق (v1.6.1)</title>
+<meta name="description" content="توثيق كامل للقالب التجاري الخفيف.">
+<style>
+:root{--bg:#0f1115;--panel:#171a21;--panel2:#1f232c;--border:#2a2f3a;--text:#e7eaf0;--muted:#9aa3b2;--accent:#4c8dff;--accent2:#6dd6a0;--warn:#ffb454;--danger:#ff6b6b;--codebg:#0b0d12;--radius:12px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;font-family:"Segoe UI",Tahoma,"Noto Sans Arabic","Cairo",system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;font-size:16px}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+code,pre{font-family:"Consolas","Courier New",monospace;direction:ltr;text-align:left}
+pre{background:var(--codebg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.5}
+code.inline{background:var(--codebg);padding:2px 6px;border-radius:4px;font-size:.92em}
+h1,h2,h3,h4{color:#fff;margin-top:1.6em}h1{font-size:2.2rem}h2{font-size:1.6rem;border-bottom:1px solid var(--border);padding-bottom:8px}h3{font-size:1.25rem;color:var(--accent2)}
+p{margin:.8em 0}ul,ol{padding-inline-start:24px}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0 20px;font-size:14px}
+th,td{border:1px solid var(--border);padding:8px 10px;vertical-align:top}th{background:var(--panel2)}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;background:var(--panel2);color:var(--muted);margin-inline-start:6px}
+.ok{color:var(--accent2)}.warn{color:var(--warn)}.danger{color:var(--danger)}
+.layout{display:grid;grid-template-columns:280px 1fr;gap:0;min-height:100vh}
+@media (max-width:900px){.layout{grid-template-columns:1fr}aside{display:none}}
+aside{position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--panel);border-inline-end:1px solid var(--border);padding:20px 14px}
+aside h4{margin:14px 0 6px;font-size:.95rem;color:var(--muted)}
+aside ul{list-style:none;padding:0;margin:0}
+aside li a{display:block;padding:4px 8px;border-radius:6px;color:var(--text);font-size:13.5px}
+aside li a:hover{background:var(--panel2);text-decoration:none}
+main{padding:24px 40px 60px;max-width:1100px}
+header.hero{background:linear-gradient(135deg,#1a2030,#0f1115);padding:40px;border-radius:var(--radius);margin-bottom:28px;border:1px solid var(--border)}
+header.hero h1{margin:0}header.hero .sub{color:var(--muted);font-size:1.05rem;margin-top:8px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin:16px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:700px){.grid2{grid-template-columns:1fr}}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:16px 0}
+.kpi>div{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px}
+.kpi strong{display:block;font-size:1.4rem;color:#fff}.kpi span{color:var(--muted);font-size:13px}
+footer{color:var(--muted);font-size:13px;border-top:1px solid var(--border);padding-top:20px;margin-top:40px}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside>
+<h4>التنقّل</h4>
+<ul>
+<li><a href="#intro">مقدمة</a></li>
+<li><a href="#what">ما هو القالب؟</a></li>
+<li><a href="#features">ما يقدّمه</a></li>
+<li><a href="#stack">المكدس التقني</a></li>
+<li><a href="#quickstart">البدء السريع</a></li>
+<li><a href="#deploy">النشر على nginx</a></li>
+<li><a href="#security-server">حماية البيانات</a></li>
+<li><a href="#structure">بنية المشروع</a></li>
+<li><a href="#routes">الروابط (المسارات)</a></li>
+<li><a href="#data">طبقة البيانات</a></li>
+<li><a href="#customize">التخصيص</a></li>
+<li><a href="#patterns">أنماط القدرات</a></li>
+<li><a href="#company-json">ملف المحتوى company.json</a></li>
+<li><a href="#qr">QR والمواقع</a></li>
+<li><a href="#order-lifecycle">دورة حياة الطلب</a></li>
+<li><a href="#admin">لوحة الإدارة</a></li>
+<li><a href="#security">الأمان</a></li>
+<li><a href="#backup">النسخ الاحتياطي</a></li>
+<li><a href="#commands">الأوامر</a></li>
+<li><a href="#api">واجهة الـ API</a></li>
+<li><a href="#tests">الاختبارات</a></li>
+<li><a href="#ci">التكامل المستمر</a></li>
+<li><a href="#tools">أدوات الفحص</a></li>
+<li><a href="#trouble">المشاكل الشائعة</a></li>
+<li><a href="#limits">حدود الإصدار</a></li>
+<li><a href="#developer">ملف المطور</a></li>
+</ul>
+</aside>
+<main>
+<header class="hero">
+<h1>القالب التجاري الخفيف</h1>
+<div class="sub">ويب مستقل · PWA · لوحة إدارة لمدير واحد · SQLite · بلا Composer/bundler · RTL عربي. الإصدار 1.6.1 · PHP 8.1+.</div>
+<div class="kpi">
+<div><strong>574+</strong><span>اختبار تلقائي</span></div>
+<div><strong>7</strong><span>أنماط قدرات</span></div>
+<div><strong>9</strong><span>جداول رئيسية</span></div>
+<div><strong>0</strong><span>خدمات خارجية مطلوبة</span></div>
+</div>
+</header>
+'@<section id="intro">
+<h2>1. مقدمة</h2>
+<p>هذا القالب «بداية» لا «منصة»: نسخة مستقلة لكل نشاط تجاري (مطعم/مقهى، متجر، عيادة، استوديو، معرض، مؤسسة). تُخصّص من <strong>ملف واحد للمحتوى</strong> و<strong>اختيار واحد للسلوك</strong>، بينما البنية (عملة، محاكاة، حقول) تُضبط بالكود.</p>
+<p>الهدف: أقل تكلفة وتعقيد ممكنين، مع أمان مناسب وتجربة استخدام بسيطة وقابلية واضحة للصيانة.</p>
+</section>
+
+<section id="what">
+<h2>2. ما هو القالب؟</h2>
+<p>قالب ويب تجاري خفيف، قابل للتثبيت كتطبيق PWA، بواجهة عربية كاملة (RTL)، ولوحة إدارة لمدير واحد، وقاعدة بيانات SQLite واحدة.</p>
+<ul>
+<li>يبدأ كنموذج لمطعم/مقهى، ويتحوّل إلى أي نشاط آخر باختيار واحد عند التهيئة (أنماط القدرات).</li>
+<li>الـ API بسيطة ومنظمة؛ كل الردود بصيغة موحدة.</li>
+<li>لا Composer ولا npm ولا services خارجية — توليد QR مضمّن (ISO/IEC 18004).</li>
+<li>nginx هو الخادم المدعوم؛ Apache غير مدعوم.</li>
+</ul>
+</section>
+
+<section id="features">
+<h2>3. ما يقدّمه</h2>
+<div class="grid2">
+<div class="card">
+<h3>للزبون</h3>
+<ul>
+<li>صفحة تعريف (غلاف، نبذة، نقاط تميّز، أقسام، معرض صور، تواصل) من ملف واحد.</li>
+<li>صفحة منتجات بالتصنيفات، بحث بسيط، صفحة تفاصيل عند الحاجة.</li>
+<li>سلة وإتمام طلب (إذا كان النمط يتضمن طلبات) + متابعة حالة برمز QR.</li>
+<li>PWA: تصفح catalog المحفوظ مسبقًا دون اتصال؛ تثبيت التطبيق.</li>
+<li>وضعان: مع طلبات (🛒) أو عرض فقط (📖).</li>
+</ul>
+</div>
+<div class="card">
+<h3>للمدير</h3>
+<ul>
+<li>لوحة إدارية: الرئيسية، التصنيفات، المنتجات، الطلبات، المواقع وQR، إعدادات العرض، الأمان والنسخ.</li>
+<li>إنشاء/تعديل/حذف/ترتيب، رفع صور، توليد QR.</li>
+<li>نسخ احتياطي (VACUUM INTO) واستعادة، تدمير النسخة والعودة للبداية.</li>
+<li>تحديث دوري للطلبات (auto refresh) بدل WebSocket.</li>
+</ul>
+</div>
+</div>
+</section>
+'@<section id="stack">
+<h2>4. المكدس التقني</h2>
+<table>
+<tr><th>المكوّن</th><th>القرار</th></tr>
+<tr><td>لغة الخادم</td><td>PHP 8.1+ (مُختبَر على 8.3/8.4)</td></tr>
+<tr><td>قاعدة البيانات</td><td>SQLite (pdo_sqlite)، ملف واحد</td></tr>
+<tr><td>الواجهة</td><td>HTML/CSS/JS vanilla + PWA (Service Worker)</td></tr>
+<tr><td>API</td><td>PHP API بسيطة (api/index.php)</td></tr>
+<tr><td>النشر</td><td>nginx + PHP-FPM (لا Docker على الاستضافة)</td></tr>
+<tr><td>الصور</td><td>رفع محلي، getimagesize، أسماء عشوائية</td></tr>
+<tr><td>المصادقة</td><td>مدير واحد: storage/config/local.php</td></tr>
+<tr><td>اللغة</td><td>العربية + RTL من البداية</td></tr>
+<tr><td>الاعتماديات</td><td>لا Composer ولا npm ولا services خارجية</td></tr>
+</table>
+</section>
+
+<section id="quickstart">
+<h2>5. البدء السريع</h2>
+<h3>1) Docker (موصى به للاختبار)</h3>
+<pre><code>docker compose up -d --build
+docker exec light-commerce php bin/console install --url=http://localhost:8080 --user=admin --pass="كلمة_سر_قوية"
+docker exec light-commerce php bin/console icons
+docker exec light-commerce php bin/console seed:demo</code></pre>
+<p>الواجهة: <code class="inline">http://localhost:8080/</code> · الإدارة: <code class="inline">http://localhost:8080/admin/</code></p>
+<h3>2) بدون Docker (للاستعراض فقط)</h3>
+<pre><code>php bin/console install --url=http://localhost:8000 --user=admin --pass="كلمة_سر_قوية"
+php bin/console icons
+php -S localhost:8000 bin/serve.php</code></pre>
+<p><code class="inline">bin/serve.php</code> يعيد إنتاج قواعد nginx للاختبار. tests/suites/deploy.php ي fabulous discrepancies؛ لا تعتمد عليه للاختبار final.</p>
+</section>
+'@<section id="deploy">
+<h2>6. النشر على استضافة nginx</h2>
+<p><strong>المتطلبات:</strong> nginx 1.18+ + PHP-FPM, PHP 8.1+ مع <code class="inline">pdo_sqlite</code>, mbstring. لا Composer/npm.</p>
+<ol>
+<li>ابنِ حزمة الإنتاج: <code class="inline">php tools/build-release.php</code> → <code class="inline">dist/light-commerce-&lt;ver&gt;/</code></li>
+<li>ارفع محتويات <code class="inline">dist/...</code> إلى جذر الموقع.</li>
+<li>ثبّت <code class="inline">deploy/nginx/site.conf</code> (عدّل server_name/root/fastcgi_pass).</li>
+<li>صلاحيات: <code class="inline">chown -R www-data:www-data storage app/uploads; chmod -R 775 ...</code></li>
+<li>ثبّت: <code class="inline">php bin/console install --url=https://site --user=admin --pass="..."</code> أو setup/index.php (ثم احذف setup/).</li>
+<li>اضبط <code class="inline">storage/config/local.php</code>: <code class="inline">'app' =&gt; ['base_url' =&gt; 'https://site']</code>.</li>
+<li>فعّل HTTPS (جلسة Secure).</li>
+<li>تحقّق: <code class="inline">php bin/console security:check</code>.</li>
+</ol>
+</section>
+
+<section id="security-server">
+<h2>7. حماية البيانات (الأهم)</h2>
+<p>القالب يشحن <code class="inline">deploy/nginx/site.conf</code> but installer does not install it on your server. تأكد ان <code class="inline">storage/</code> غير قابل للتنزيل.</p>
+<pre><code>php bin/console security:check
+curl -I https://your-site.com/storage/database/app.sqlite</code></pre>
+<p>إن لم تستطع تثبيت قواعد، انقل البيانات خارج جذر الموقع:</p>
+<pre><code>php tools/move-outside-webroot.php --yes
+php bin/console security:check</code></pre>
+</section>
+
+<section id="structure">
+<h2>8. بنية المشروع</h2>
+<pre><code>project/
+├── index.php                  نقطة دخول واجهة الزبون (روابط نظيفة)
+├── sw.js                     Service Worker (جذر الموقع)
+├── app/                     ملفات واجهة الزبون (PWA)
+│   ├── index.html           هيكل الصفحة (قالب)
+│   ├── manifest.webmanifest  بيان التطبيق
+│   ├── assets/icons/        أيقونات (مولّدة)
+│   ├── css/app.css
+│   ├── js/                  api.js · store.js · ui.js · app.js
+│   └── uploads/             صور مرفوعة
+├── admin/                   لوحة الإدارة (index.php + assets)
+├── api/                     واجهة JSON (index.php + routes/public.php, admin.php)
+├── src/                     كود الخادم (غير متاح عبر الويب)
+│   ├── Config/ProjectConfig.php كل التخصيص البنيوي
+│   ├── Core/ Database · HTTP · الأمان · QR · Money · Paths...
+│   ├── Repositories/        وصول للبيانات
+│   ├── Services/            منطق: Catalog · Order · Instance · Backup · Qr
+│   └── Tools/               DemoSeeder · IconGenerator
+├── storage/                 (محمية/خارج public_html)
+│   ├── config/local.php     أسرار
+│   ├── database/app.sqlite  قاعدة البيانات
+│   └── uploads/ backups/ logs/ tmp/
+├── tests/ (300+)
+├── setup/index.php          معالج التهيئة (حذف بعد الاستخدام)
+├── bin/console              أوامر الصيانة
+├── deploy/nginx/site.conf   قواعد nginx (مرجع وحيد)
+├── Dockerfile · compose.yaml
+└── docs/  README  CHANGELOG  AUDIT_REPORT  SPEC_v1</code></pre>
+</section>
+
+<section id="routes">
+<h2>9. الروابط (المسارات)</h2>
+<table>
+<tr><th>رابط</th><th>صفحة</th></tr>
+<tr><td>/</td><td>القائمة (رموز QR: /?loc=CODE)</td></tr>
+<tr><td>/cart</td><td>السلة</td></tr>
+<tr><td>/checkout</td><td>إتمام الطلب</td></tr>
+<tr><td>/success</td><td>تأكيد الطلب</td></tr>
+<tr><td>/order/{رمز}</td><td>متابعة الطلب</td></tr>
+<tr><td>/product/{رقم}</td><td>قائمة مع فتح منتج</td></tr>
+<tr><td>/admin/</td><td>لوحة الإدارة</td></tr>
+</table>
+<p>القاعدة: <code class="inline">index.php</code> على الجذر يقدّم SPA. الرابط القديم <code class="inline">/app/index.html</code> يوجّه 301 (ي حافظ ?loc=). بدون nginx rewrite, app falls back to hash routing (#/cart).</p>
+</section>
+
+<section id="data">
+<h2>10. طبقة البيانات</h2>
+<table>
+<tr><th>جدول</th><th>المحتوى</th></tr>
+<tr><td>settings</td><td>إعدادات العرض (runtime)</td></tr>
+<tr><td>categories</td><td>اسم، ترتيب، تفعيل</td></tr>
+<tr><td>products</td><td>اسم، price_minor، صورة، وصف، تصنيف، توفر، extra_json</td></tr>
+<tr><td>locations</td><td>معرّف موقع، اسم، نوع، حالة</td></tr>
+<tr><td>orders</td><td>رقم، زبون، موقع، حالة، إجمالي، idempotency key، token</td></tr>
+<tr><td>order_items</td><td>عناصر + لقطة اسم/سعر وقت الطلب</td></tr>
+<tr><td>order_events</td><td>سجل تغييرات الحالة</td></tr>
+<tr><td>daily_counters</td><td>ترقيم يومي</td></tr>
+<tr><td>login_attempts</td><td>تدقيق rate limit</td></tr>
+</table>
+<p>الأسعار تُخزن كـ integer (price_minor). التواريخ بـ <code class="inline">Database::now()</code> (timezone الإصدار, not UTC).</p>
+</section>
+'@<section id="customize">
+<h2>11. التخصيص (3 مستويات)</h2>
+<table>
+<tr><th>ماذا تريد أن تتغير؟</th><th>من أين</th></tr>
+<tr><td>محتوى: الاسم، النبذة، صور، تواصل، أقسام</td><td><code class="inline">app/data/company.json</code> (ملف واحد، بلا كود)</td></tr>
+<tr><td>سلوك: هل طلبات/حجوزات؟ مواقع؟ تفاصيل/معرض؟ تسميات؟</td><td><code class="inline">src/Config/TemplatePatterns.php</code> (أنماط) + setup/console</td></tr>
+<tr><td>بنية: عملة، مناطق، حقول، قواعد أمان</td><td><code class="inline">src/Config/ProjectConfig.php</code> (+ migrations)</td></tr>
+</table>
+<p>التخصيص 80% من(no code). المحتوى والسلوك لا يضيفان قدرات جديدة: لإضافة قسم/حقل جديد عدّل القالب نه لا الملف.</p>
+</section>
+
+<section id="patterns">
+<h2>12. أنماط القدرات</h2>
+<table>
+<tr><th>النمط</th><th>الطلبات</th><th>المواقع</th><th>التفاصيل والصور</th></tr>
+<tr><td>orders_tables</td><td>سلة متعددة + متابعة</td><td>إلزامية برموز QR</td><td>صفحة تفاصيل + معرض</td></tr>
+<tr><td>orders</td><td>سلة متعددة + متابعة</td><td>بلا مواقع</td><td>صفحة تفاصيل + معرض</td></tr>
+<tr><td>reservations</td><td>حجز موعد واحد</td><td>بلا مواقع</td><td>صفحة تفاصيل + معرض</td></tr>
+<tr><td>showcase</td><td>بلا طلبات</td><td>لا</td><td>بطاقة مختصرة فقط</td></tr>
+<tr><td>showcase_details</td><td>بلا طلبات</td><td>لا</td><td>صفحة تفاصيل + معرض (الافتراضي)</td></tr>
+<tr><td>showcase_order</td><td>طلب عنصر واحد</td><td>لا</td><td>صفحة تفاصيل + معرض</td></tr>
+<tr><td>custom</td><td>حسب الإجابات</td><td>حسب الإجابات</td><td>حسب الإجابات</td></tr>
+</table>
+<p>النمط المخصص (setup) يسأل: طلبات؟ سلة متعددة أم عنصر واحد أم حجز؟ مواقع إلزامية أو اختيارية؟ صفحة تفاصيل؟ صورة واحدة أم معرض؟ ثم يبني النمط والتسميات، ويُحفظ كـ <code class="inline">template_blueprint</code> (لقطة) حتى لا تغيّره ترقيات template.</p>
+<p>لتغييره بعد التثبيت: <code class="inline">php bin/console preset list|show|apply &lt;id&gt;</code>. المعرّفات القديمة (restaurant/store/clinic/studio/showroom/general) تُترجم تلقائيًا.</p>
+<p>وضع «عرض فقط» ليس إخفاء زر: <code class="inline">order.create</code> و <code class="inline">order.status</code> تردّ 404 من الخادم؛ وتُخفى تبويبات السلة/الطلبات/المواقع في الإدارة.</p>
+</section>
+
+<section id="company-json">
+<h2>13. ملف المحتوى company.json</h2>
+<p>صفحتا Home و Contact تُبنى بالكامل من <code class="inline">app/data/company.json</code>. شرح keys: <code class="inline">app/data/README.md</code>.</p>
+<pre><code>{
+  "brand":   { "name": "معرض النور", "tagline": "سيارات مستعملة بضمان" },
+  "about":   { "summary": "أكثر من 200 مركبة مفحوصة، كلها بضمان سنة." },
+  "contact": { "phone": "03 123 456", "instagram": "@noor.cars",
+    "working_hours": [ { "day": "السبت — الخميس", "open": "10:00", "close": "19:00" } ] },
+  "sections": [ { "icon": "shield", "title": "ضمان سنة", "body": "فحص كامل قبل التسليم." } ]
+}</code></pre>
+<p>الملف اختياري: احذفه/أفسده — الموقع يعود defaults. القاعدة: يملأ what exists في template، ولا يضيف capabilities.</p>
+</section>
+
+<section id="qr">
+<h2>14. QR والمواقع</h2>
+<ul>
+<li>نوعان: QR الموقع (طاولة 5) يحدد location في session; QR الطلب (token 32 chars) opens order info read-only.</li>
+<li>مسح QR Location does not create order. Every successful submission creates independent order with unique id.</li>
+<li>location can be required (server enforced, not just UI).</li>
+<li>QR generation in admin (locations and orders) — no external paid service.</li>
+<li>Location code prefix: match locationCodePrefix() (T/C/L).</li>
+<li>Order token TTL: ORDER_TOKEN_TTL_MINUTES (14 days default).</li>
+</ul>
+</section>
+'@<section id="order-lifecycle">
+<h2>15. دورة حياة الطلب</h2>
+<p>الحالات الافتراضية: <code class="inline">new → in_progress → completed</code> + <code class="inline">cancelled</code>. كل حالة تنتقل إلى next محدّد (server enforced).</p>
+<p>عند الإرسال (OrderService): verify input, verify products availability/prices, verify location, compute total on server, save order+items in single transaction, snapshot product name/price/qty, return order number. Idempotency-Key unique constraint prevents duplicate on retry. Cancel changes status, does not delete record.</p>
+</section>
+
+<section id="admin">
+<h2>16. لوحة الإدارة</h2>
+<p>الأقسام: الرئيسية (ملخص)，التصنيفات، المنتجات، الطلبات، المواقع وQR، إعدادات العرض. التخصيص الهيكلي (type, fields) not available in admin (by design). جلسة: HttpOnly + SameSite=Strict + Secure (HTTPS)، idle 2h، max 12h، renewal after login, 6 attempts then 15 min lockout. CSP stringent + nosniff + frame-ancestors none. All mutations require X-CSRF-Token.</p>
+</section>
+
+<section id="security">
+<h2>17. الأمان</h2>
+<table>
+<tr><th>المجال</th><th>الإجراء</th></tr>
+<tr><td>كلمة مرور المدير</td><td>password_hash (bcrypt/argon) في storage/config/local.php outsite public paths</td></tr>
+<tr><td>SQL Injection</td><td>prepared statements everywhere</td></tr>
+<tr><td>XSS</td><td>escaping outputs + strip_tags on input</td></tr>
+<tr><td>الأسعار</td><td>server computes from DB; ignores client price</td></tr>
+<tr><td>رفع ملفات</td><td>real MIME via getimagesize + ext whitelist + size/dims + random name + no exec in uploads</td></tr>
+<tr><td>CSRF</td><td>token tied to session on all mutations</td></tr>
+<tr><td>Rate limit</td><td>orders 60/min/IP; admin login 6 attempts/15 min</td></tr>
+<tr><td>Idempotency</td><td>Idempotency-Key + DB unique constraint</td></tr>
+<tr><td>رموز المتابعة</td><td>32 hex from random_bytes + TTL</td></tr>
+<tr><td> Secrets</td><td>storage/config/local.php not committed (.gitignore)</td></tr>
+</table>
+<p>Checks: <code class="inline">php tools/code-review.php</code> (29), <code class="inline">php tools/security-probe.php &lt;url&gt;</code> (52, staging only), <code class="inline">php bin/console security:check</code>.</p>
+</section>
+
+<section id="backup">
+<h2>18. النسخ الاحتياطي والاستعادة</h2>
+<ul>
+<li>لوحة: الأمان والنسخ → إنشاء نسخة الآن → تنزيل.</li>
+<li>CLI: <code class="inline">php bin/console backup</code> → storage/backups/backup-YYYYmmdd-HHMMSS.sqlite (VACUUM INTO; safe during workload; perms 600).</li>
+<li>استعادة: stop traffic (optional), copy backup to storage/database/app.sqlite, delete -wal/-shm, restart.</li>
+<li>Cron يومي: <code class="inline">0 3 * * * cd /path && php bin/console backup &gt; /dev/null</code>.</li>
+</ul>
+</section>
+'@<section id="commands">
+<h2>19. الأوامر المتاحة (bin/console)</h2>
+<pre><code>php bin/console install --url=... --user=... --pass=...   تهيئة النسخة لأول مرة [--preset=... --name=... --tagline=...]
+php bin/console migrate                                     تحديث مخطط DB
+php bin/console migrate:fresh                               حذف كل البيانات وإعادة الإنشاء
+php bin/console instance state                              حالة النسخة وما سيُحذف
+php bin/console instance destroy --force                    تدمير النسخة والعودة للبداية [--no-archive --keep-backups]
+php bin/console admin:password --pass=...                  تعيين كلمة مرور المدير
+php bin/console admin:reset --force                        فرض بيانات الدخول الافتراضية (طوارئ)
+php bin/console preset list|show|apply &lt;id&gt;                عرض/تغيير نمط القدرات
+php bin/console backup                                     نسخة احتياطية الآن
+php bin/console icons                                      توليد أيقونات PWA
+php bin/console qr "نص" --out=file.svg                     توليد رمز QR (SVG)
+php bin/console seed:demo                                  بيانات تجريبية
+php bin/console security:check                             كشف تسريب المسارات الحساسة
+php bin/console status                                     حالة النسخة</code></pre>
+<p>أنماط: <code class="inline">orders_tables · orders · reservations · showcase · showcase_details · showcase_order · custom</code>. legacy ids auto-map.</p>
+</section>
+
+<section id="api">
+<h2>20. واجهة الـ API</h2>
+<p>كل المسارات على <code class="inline">api/index.php?r=&lt;route&gt;</code>, returns always <code class="inline">{ ok, data|error }</code>.</p>
+<h3>Public</h3>
+<table>
+<tr><th>route</th><th>method</th><th>function</th></tr>
+<tr><td>catalog.snapshot</td><td>GET</td><td>settings + categories + products + locations (cacheable offline)</td></tr>
+<tr><td>product.get&id=</td><td>GET</td><td>product detail</td></tr>
+<tr><td>locations.list</td><td>GET</td><td>active locations</td></tr>
+<tr><td>order.create</td><td>POST</td><td>create order (Idempotency-Key required)</td></tr>
+<tr><td>order.status&token=</td><td>GET</td><td>order track (read only)</td></tr>
+<tr><td>ping</td><td>GET</td><td>health</td></tr>
+</table>
+<p>Example order.create requires items without prices (server is price source) + Idempotency-Key; repeat with same key returns same order (no duplicate).</p>
+<h3>Admin (session + CSRF)</h3>
+<p>admin.login · logout · session · password · dashboard · orders.active · orders · order · order.status · order.qr · qr · qr.sheet · categories · category.create/update/delete · categories.reorder · products · product.create/update/delete/image · locations · location.save/delete · settings · settings.update/export · backups · backup.create/download · instance.state · instance.destroy.</p>
+<p>Note: <code class="inline">admin.settings.export</code> is POST (state-changing → CSRF) and returns redacted settings (no password_hash/app_key).</p>
+</section>
+'@<section id="tests">
+<h2>21. الاختبارات</h2>
+<pre><code>php tests/run.php            # all (574+)
+php tests/run.php orders     # single group (orders|security|catalog|pwa|routing)
+php tests/http/check.php &lt;url&gt; # 50 deployment checks on live site<section id="ci">
+<h2>22. التكامل المستمر (CI)</h2>
+<p><code class="inline">.github/workflows/verify.yml</code> works on dev source only; runs on push/PR. Three jobs: unit (574 tests + lint, PHP 8.1/8.3/8.4), nginx (real nginx from apt, tests <code class="inline">deploy/nginx/site.conf</code>), package (build release + validate + version sync). No auto deploy. Tag v* runs same checks.</p>
+</section>
+
+<section id="tools">
+<h2>23. أدوات الفحص (no external deps)</h2>
+<pre><code>php tests/run.php
+php tools/build-release.php
+php tools/deploy-check.php
+php tests/http/check.php &lt;url&gt;
+php tools/workflow-test.php &lt;url&gt;
+php tools/security-probe.php &lt;url&gt;
+php tools/code-review.php
+php tools/restore-test.php
+php tools/clean-install-test.php
+php tools/check-admin-pass.php
+php tools/audit-backup.php
+php tools/load-test.php 50000 90
+php tools/move-outside-webroot.php --yes
+php bin/console security:check</code></pre>
+</section>
+'@<section id="trouble">
+<h2>24. المشاكل الشائعة</h2>
+<ul>
+<li><strong>صفحة تحولك إلى setup:</strong> <code class="inline">storage/config/local.php</code> غير موجود. نفّذ install or open setup.</li>
+<li><strong>«حدث خطأ في الخادم» بعد التحديث:</strong> نفّذ <code class="inline">php bin/console migrate</code>.</li>
+<li><strong>رموز QR لا تعمل:</strong> تأكد <code class="inline">base_url</code> في local.php هو رابطك الحقيقي (https). جرّب الرابط تحت الرمز.</li>
+<li><strong>رابط مباشر /cart أو /order gives 404:</strong> needs rewrite to index.php (nginx try_files). بدونه app falls back to hash routing.</li>
+<li><strong>الصور لا تظهر:</strong> تأكد app/uploads writable (775) وأن الخادم allows display.</li>
+<li><strong>الطلبات لا تصل إلى اللوحة:</strong> HTTPS, api not blocked, storage writable.</li>
+<li><strong>الترميز العربي مشوّه:</strong> default_charset=UTF-8, files UTF-8 without BOM.</li>
+<li><strong>«لا يوجد اتصال» مع إنترنت:</strong> server error in api/index.php; inspect storage/logs/app-*.log.</li>
+</ul>
+</section>
+
+<section id="limits">
+<h2>25. حدود الإصدار الأول (out of scope)</h2>
+<p>تعدد الشركات، حسابات الزبائن، صلاحيات متعددة، دفع إلكتروني، محاسبة، مخزون متقدم، مزامنة offline، إشعارات لحظية، تطبيقات أصلية، منشئ قوالب ديناميكي، تعدد قواعد البيانات.</p>
+</section>
+
+<section id="developer">
+<h2>26. ملف المطور</h2>
+<p>للمطورين: راجع <a href="../DEVELOPER.md">DEVELOPER.md</a> (وعند need, ../DEVELOPERS.md). It covers architecture, config overrides, money/date rules, schema, adding features/routes, security checklist, testing, release workflow.</p>
+<p>أيضًا: <a href="BUILD_GUIDE.md">docs/BUILD_GUIDE.md</a>, <a href="SPEC_v1.md">docs/SPEC_v1.md</a>, <a href="../README.md">README.md</a>, <a href="../AUDIT_REPORT.md">AUDIT_REPORT.md</a>, <a href="../CHANGELOG.md">CHANGELOG.md</a>.</p>
+</section>
+
+<footer>
+<p>© القالب التجاري الخفيف · وثائق v1.6.1 · PHP 8.1+ · SQLite · nginx. الكود: ProjectConfig::VERSION is source of truth for version.</p>
+</footer>
+</main>
+</div>
+</body>
+</html>
+'@

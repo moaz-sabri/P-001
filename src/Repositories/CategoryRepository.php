@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\Core\Cache;
 use App\Core\Database;
 
 /**
@@ -29,7 +30,7 @@ final class CategoryRepository
     public function create(array $data): int
     {
         $max = (int) Database::value('SELECT COALESCE(MAX(sort_order), 0) FROM categories');
-        return Database::insert('categories', [
+        $id = Database::insert('categories', [
             'name'        => (string) ($data['name'] ?? ''),
             'description' => $data['description'] ?? '',
             'image_path'  => $data['image_path'] ?? '',
@@ -38,6 +39,8 @@ final class CategoryRepository
             'created_at'  => Database::now(),
             'updated_at'  => Database::now(),
         ]);
+        Cache::flush();
+        return $id;
     }
 
     public function update(int $id, array $data): void
@@ -56,6 +59,7 @@ final class CategoryRepository
         }
 
         Database::update('categories', $fields, 'id = :id', ['id' => $id]);
+        Cache::flush();
     }
 
     public function reorder(array $orderedIds): void
@@ -67,11 +71,13 @@ final class CategoryRepository
                 Database::update('categories', ['sort_order' => $i], 'id = :id', ['id' => (int) $id]);
             }
         });
+        Cache::flush();
     }
 
     public function delete(int $id): void
     {
         Database::delete('categories', 'id = :id', ['id' => $id]);
+        Cache::flush();
     }
 
     public function countProducts(int $categoryId): int

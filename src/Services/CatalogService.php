@@ -33,14 +33,9 @@ final class CatalogService
     /** الحمولة الكاملة (bootstrap) لواجهة الزبون. */
     public function snapshot(?string $search = null): array
     {
-        if (!\App\Core\Cache::enabled()) {
-            return $this->buildSnapshot($search);
-        }
-        return \App\Core\Cache::remember(
-            'catalog.snapshot.' . md5((string) $search),
-            30,
-            fn(): array => $this->buildSnapshot($search)
-        );
+        // قراءة مباشرة من قاعدة البيانات — حتى لا تُعرض نسخة قديمة
+        // بعد إضافة/تعديل عناصر من لوحة الإدارة.
+        return $this->buildSnapshot($search);
     }
 
     private function buildSnapshot(?string $search = null): array

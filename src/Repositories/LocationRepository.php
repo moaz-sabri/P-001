@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Config\ProjectConfig;
+use App\Core\Cache;
 use App\Core\Database;
 
 /**
@@ -44,7 +45,7 @@ final class LocationRepository
         }
         if ($id === null) {
             $max = (int) Database::value('SELECT COALESCE(MAX(sort_order), 0) FROM locations');
-            return Database::insert('locations', [
+            $newId = Database::insert('locations', [
                 'code'       => $code,
                 'name'       => (string) ($data['name'] ?? ''),
                 'type'       => $data['type'] ?? '',
@@ -54,6 +55,8 @@ final class LocationRepository
                 'created_at' => Database::now(),
                 'updated_at' => Database::now(),
             ]);
+            Cache::flush();
+            return $newId;
         }
 
         Database::update('locations', [
@@ -65,13 +68,14 @@ final class LocationRepository
             'sort_order' => (int) ($data['sort_order'] ?? 0),
             'updated_at' => date('Y-m-d H:i:s'),
         ], 'id = :id', ['id' => $id]);
-
+        Cache::flush();
         return $id;
     }
 
     public function delete(int $id): void
     {
         Database::delete('locations', 'id = :id', ['id' => $id]);
+        Cache::flush();
     }
 
     public function codeExists(string $code, ?int $exceptId = null): bool

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers\Admin;
 
 use App\Config\ProjectConfig;
+use App\Core\Cache;
 use App\Core\CompanyProfile;
 use App\Core\Http\HttpError;
 use App\Core\Http\Request;
@@ -164,6 +165,7 @@ final class SettingsController
 
         RuntimeSettings::setMany($pairs);
         RuntimeSettings::flush();
+        \App\Core\Cache::flush();
 
         Response::ok(['settings' => RuntimeSettings::adminPayload()]);
     }
