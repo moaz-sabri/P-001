@@ -90,6 +90,9 @@
             }
 
             Api.online = true;
+             if (global.App && global.App.UI && typeof global.App.UI.setOffline === "function") {
+               global.App.UI.setOffline(false);
+             }
             return payload.data;
           });
         })
@@ -99,6 +102,9 @@
             Api.online = false;
           } else {
             Api.online = true;
+             if (global.App && global.App.UI && typeof global.App.UI.setOffline === "function") {
+               global.App.UI.setOffline(false);
+             }
           }
           Api.lastError = error;
           if (error.name === "AbortError") {

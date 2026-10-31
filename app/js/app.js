@@ -364,6 +364,7 @@
       .then(function (data) {
         Store.setSnapshot(data);
         applySnapshot();
+        UI.setOffline(false);
         if (state.view === "home" && UI.renderHomeProducts) UI.renderHomeProducts();
       })
       .catch(function (error) {
