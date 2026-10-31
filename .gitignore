@@ -20,6 +20,7 @@
 /storage/destroyed/*
 /storage/logs/*
 /storage/tmp/*
+/storage/cache/*
 
 # الصور المرفوعة من لوحة الإدارة (تُنشأ على الخادم)
 /app/uploads/*

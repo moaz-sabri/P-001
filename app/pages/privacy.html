@@ -1,16 +1,76 @@
+<!-- Free privacy page fragment: customize freely. General info is injected at runtime -->
 <section class="landing">
-  <header class="landing-hero">
-    <img class="brand-logo" data-brand="logo" alt="" hidden>
-    <h1 data-brand="name">اسم الشركة</h1>
-    <p data-brand="tagline">رسالة الترحيب الأولى</p>
+  <header class="landing-hero landing-hero--compact">
+    <span class="landing-chip">الخصوصية</span>
+    <img class="brand-logo landing-logo" data-brand="logo" alt="" hidden>
+    <h1 class="landing-title" data-brand="name">اسم الشركة</h1>
+    <p class="landing-lead" data-brand="tagline">رسالة الترحيب الأولى</p>
   </header>
 
-  <section class="landing-section">
-    <h2>سياسة الخصوصية</h2>
-    <p data-brand="summary">—</p>
-    <p>
+  <section class="landing-panel privacy-intro">
+    <div class="landing-panel-head">
+      <span class="landing-kicker">سياسة</span>
+      <h2>سياسة الخصوصية</h2>
+    </div>
+    <p class="landing-text" data-brand="summary">—</p>
+    <p class="landing-text landing-muted">
       هذه صفحة حرة (free page): عدّل محتواها بما يتناسب مع نشاطك. المعلومات
       العامة (اسم الشركة، الشعار، رسالة الترحيب) تُحقَن تلقائيًا.
     </p>
+  </section>
+
+  <section class="privacy-grid">
+    <article class="privacy-card">
+      <h3>1. المعلومات التي نجمعها</h3>
+      <p>نجمع فقط البيانات الضرورية لمعالجة الطلبات وتقديم الخدمة.</p>
+    </article>
+    <article class="privacy-card">
+      <h3>2. استخدام المعلومات</h3>
+      <p>تُستخدم البيانات لتنفيذ الطلبات، وتقديم الدعم، وضمان أمان الخدمة.</p>
+    </article>
+    <article class="privacy-card">
+      <h3>3. مشاركة المعلومات</h3>
+      <p>لا نبيع البيانات الشخصية؛ تُشارك فقط مع مزوّدي الخدمة عند الحاجة.</p>
+    </article>
+    <article class="privacy-card">
+      <h3>4. الاحتفاظ بالبيانات</h3>
+      <p>نحتفظ بالبيانات للمدة الضرورية لأغراض قانونية واستمرار الخدمة.</p>
+    </article>
+  </section>
+
+  <section class="landing-panel">
+    <div class="landing-panel-head">
+      <span class="landing-kicker">حقوقك</span>
+      <h2>حقوقك</h2>
+      <p class="landing-text landing-muted">أمثلة يمكن استبدالها ببنودك الفعلية.</p>
+    </div>
+    <ul class="privacy-list">
+      <li>طلب الوصول إلى بياناتك أو تصحيحها أو حذفها.</li>
+      <li>سحب الموافقة في أي وقت (حيث ينطبق).</li>
+      <li>الاعتراض على بعض أنواع المعالجة.</li>
+      <li>طلب نسخة من بياناتك (قابلة للنقل).</li>
+    </ul>
+  </section>
+
+  <details class="privacy-item">
+    <summary>ملفات Cookies والتقنيات</summary>
+    <div class="privacy-item-body">
+      نستخدم ملفات Cookies لتذكّر التفضيلات وتحسين التجربة. يمكن تعطيلها من إعدادات المتصفح.
+    </div>
+  </details>
+
+  <details class="privacy-item">
+    <summary>تغييرات السياسة</summary>
+    <div class="privacy-item-body">
+      قد نقوم بتحديث هذه السياسة؛ تُنشر التغييرات على هذه الصفحة. استمرار الاستخدام يعني القبول.
+    </div>
+  </details>
+
+  <section class="landing-callout privacy-contact">
+    <div>
+      <h2>أسئلة حول الخصوصية؟</h2>
+      <p class="landing-text">تواصل معنا لأي استفسار أو طلب متعلق بالخصوصية.</p>
+    </div>
+    <a class="btn btn-ghost btn-lg" data-go="contact">تواصل معنا</a>
   </section>
 </section>

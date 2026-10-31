@@ -1,103 +1,68 @@
 {
-  "schema_version": 1,
-
-  "brand": {
-    "name": "",
-    "tagline": "",
-    "logo": "",
-    "hero_image": "",
-    "cover_image": ""
-  },
-
-  "about": {
-    "summary": "",
-    "story": "",
-    "highlights": [
-      { "icon": "check", "title": "", "text": "" },
-      { "icon": "star", "title": "", "text": "" },
-      { "icon": "heart", "title": "", "text": "" }
-    ],
-    "gallery": []
-  },
-
-  "home": {
-    "layout": "classic",
-    "height": "large",
-
-    "show_highlights": true,
-    "show_sections": true,
-    "show_gallery": true,
-    "show_stats": true,
-    "show_testimonials": true,
-    "show_faq": true,
-    "show_cta": true,
-    "show_contact": true,
-
-    "hero": {
-      "eyebrow": "",
-      "title": "",
-      "text": "",
-      "primary_label": "",
-      "primary_url": "",
-      "secondary_label": "",
-      "secondary_url": ""
+    "schema_version": 1,
+    "brand": {
+        "name": "Test",
+        "tagline": "Subtest",
+        "logo": "",
+        "hero_image": "",
+        "cover_image": ""
     },
-
-    "stats": [
-      { "value": "", "label": "" }
+    "about": {
+        "summary": "Subtest",
+        "story": "",
+        "highlights": [],
+        "gallery": []
+    },
+    "home": {
+        "layout": "classic",
+        "height": "large",
+        "hero": {
+            "eyebrow": "Subtest",
+            "title": "",
+            "text": "Subtest",
+            "primary_label": "تصفّح المعروضات",
+            "primary_url": "",
+            "secondary_label": "",
+            "secondary_url": ""
+        },
+        "stats": [],
+        "testimonials": [],
+        "faq": []
+    },
+    "contact": {
+        "phone": "",
+        "whatsapp": "",
+        "email": "",
+        "instagram": "",
+        "facebook": "",
+        "telegram": "",
+        "tiktok": "",
+        "youtube": "",
+        "address": "",
+        "map_url": "",
+        "working_hours": []
+    },
+    "sections": [
+        {
+            "icon": "users",
+            "title": "من نحن؟",
+            "body": "اكتب هنا قصتك: منذ متى تعمل، وما الذي يقدّمه نشاطك بالضبط. هذه الفقرة هي أول ما يقرؤه الزائر، فاجعلها واضحة ومختصرة.",
+            "bullets": []
+        }
     ],
-
-    "testimonials_title": "قالوا عنّا",
-    "testimonials": [
-      { "quote": "", "name": "", "role": "" }
-    ],
-
-    "faq_title": "أسئلة شائعة",
-    "faq": [
-      { "q": "", "a": "" }
-    ]
-  },
-
-  "contact": {
-    "phone": "",
-    "whatsapp": "",
-    "email": "",
-    "instagram": "",
-    "facebook": "",
-    "telegram": "",
-    "tiktok": "",
-    "youtube": "",
-    "address": "",
-    "map_url": "",
-    "working_hours": [
-      { "day": "", "open": "", "close": "" }
-    ]
-  },
-
-  "sections": [
-    {
-      "icon": "award",
-      "title": "",
-      "body": "",
-      "bullets": []
+    "cta": {
+        "title": "هل لديك سؤال؟",
+        "text": "تواصل معنا مباشرة وسنرد عليك في أقرب وقت.",
+        "button_label": "تواصل معنا",
+        "button_url": ""
+    },
+    "seo": {
+        "title": "",
+        "description": "",
+        "keywords": ""
+    },
+    "footer": {
+        "note": "",
+        "links": []
     }
-  ],
-
-  "cta": {
-    "title": "",
-    "text": "",
-    "button_label": "",
-    "button_url": ""
-  },
-
-  "seo": {
-    "title": "",
-    "description": "",
-    "keywords": ""
-  },
-
-  "footer": {
-    "note": "",
-    "links": []
-  }
 }

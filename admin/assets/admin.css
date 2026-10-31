@@ -690,3 +690,10 @@ td.actions .btn { margin-inline-start: 6px; }
   .admin-view { padding: 0; }
   .panel { box-shadow: none; border-color: #ddd; }
 }
+
+/* ===== settings redesign: effect map ===== */
+.settings-map { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; margin: 0 0 18px; }
+.settings-map ul { margin: 0; padding-inline-start: 20px; color: var(--ink-2); font-size: .82rem; line-height: 1.65; }
+.settings-map .field-hint { color: var(--ink-3); }
+.field-effect { font-size: .76rem; color: var(--info); margin: 6px 0 0; background: var(--info-soft); border: 1px solid rgba(29,78,216,.15); border-radius: 8px; padding: 6px 8px; line-height: 1.45; }
+.settings-map h4 { margin: 0 0 8px; }

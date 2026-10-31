@@ -486,7 +486,8 @@ final class TemplatePatterns
             'plural'        => $pick('plural', 'العناصر'),
             'catalog_title' => $pick('catalog_title', 'المعروضات'),
             'catalog_cta'   => $pick('catalog_cta', 'تصفّح المعروضات'),
-            'order_cta'     => $pick('order_cta', 'اطلب الآن'),
+            'order_cta'     => $pick('order_cta', ''),
+
             'hero_title'    => $pick('hero_title', 'مرحبًا بكم'),
         ];
     }

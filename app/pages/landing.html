@@ -1,22 +1,82 @@
 <!-- Free landing page fragment: customize freely. General info is injected via UI.renderFreeLanding -->
 <section class="landing">
-  <section class="landing-hero">
-    <img class="brand-logo" data-brand="logo" alt="" hidden>
-    <h1 data-brand="name">اسم الشركة</h1>
-    <p data-brand="tagline">رسالة الترحيب الأولى</p>
+  <header class="landing-hero">
+    <span class="landing-chip">ترحيب</span>
+    <img class="brand-logo landing-logo" data-brand="logo" alt="" hidden>
+    <h1 class="landing-title" data-brand="name">اسم الشركة</h1>
+    <p class="landing-lead" data-brand="tagline">رسالة الترحيب الأولى</p>
     <div class="landing-actions">
-      <a class="primary" data-go="products">تصفح المنتجات</a>
-      <a class="ghost" data-go="contact">تواصل معنا</a>
+      <a class="btn btn-primary btn-lg" data-go="products">تصفح المنتجات</a>
+      <a class="btn btn-ghost btn-lg" data-go="contact">تواصل معنا</a>
+    </div>
+  </header>
+
+  <section class="landing-panel landing-about">
+    <div class="landing-panel-head">
+      <span class="landing-kicker">عنّا</span>
+      <h2>من نحن</h2>
+    </div>
+    <p class="landing-text" data-brand="summary">نبذة عن الشركة…</p>
+    <p class="landing-text landing-muted">
+      هذه صفحة حرة (free page): عدّل محتواها بما يتناسب مع نشاطك. المعلومات
+      العامة (اسم الشركة، الشعار، رسالة الترحيب) تُحقَن تلقائيًا.
+    </p>
+  </section>
+
+  <section class="landing-panel">
+    <div class="landing-panel-head">
+      <span class="landing-kicker">أقسام</span>
+      <h2>أبرز ما نقدّمه</h2>
+      <p class="landing-text landing-muted">أمثلة يمكن استبدالها بخدماتك أو أقسامك.</p>
+    </div>
+    <div class="landing-grid">
+      <article class="branch-card">
+        <span class="branch-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M12 3.8 14.5 8.9 20.2 9.7 16.1 13.7 17.1 19.3 12 16.6 6.9 19.3 7.9 13.7 3.8 9.7 9.5 8.9Z"/></svg>
+        </span>
+        <h3>أصناف مختارة</h3>
+        <p>أفضل ما نقدّمه، مرتّب بعناية لسهولة الاختيار.</p>
+      </article>
+      <article class="branch-card">
+        <span class="branch-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M3 7h10v8H3zM13 10h4l3 3v2h-7z"/><circle cx="7" cy="17" r="1.6" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="17" cy="17" r="1.6" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+        </span>
+        <h3>توصيل سريع</h3>
+        <p>تجهيز سريع وتسليم موثوق لطلبك.</p>
+      </article>
+      <article class="branch-card">
+        <span class="branch-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M12 3.5 19 6v6c0 4-2.9 7-7 8.5-4.1-1.5-7-4.5-7-8.5V6Z"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/></svg>
+        </span>
+        <h3>جودة مضمونة</h3>
+        <p>معايير ثابتة في الإعداد والتقديم.</p>
+      </article>
+      <article class="branch-card">
+        <span class="branch-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M12 19s-6.5-4.2-6.5-8.3A3.7 3.7 0 0 1 12 8.4a3.7 3.7 0 0 1 6.5 2.3C18.5 14.8 12 19 12 19Z"/></svg>
+        </span>
+        <h3>خدمة ودودة</h3>
+        <p>فريق مستعد للرد والمساعدة في كل خطوة.</p>
+      </article>
     </div>
   </section>
 
-  <section class="landing-section">
-    <h2>عنّا</h2>
-    <p data-brand="summary">نبذة عن الشركة…</p>
+  <section class="landing-panel landing-hours">
+    <div class="landing-panel-head">
+      <span class="landing-kicker">العمل</span>
+      <h2>أوقات العمل</h2>
+      <p class="landing-text landing-muted">نرحّب بك في الأوقات التالية.</p>
+    </div>
+    <div class="hours-card">
+      <table data-brand="working_hours" class="hours-table"></table>
+    </div>
   </section>
 
-  <section class="landing-hours">
-    <h2>أوقات العمل</h2>
-    <table data-brand="working_hours"></table>
+  <section class="landing-callout">
+    <div>
+      <h2>جاهزون لخدمتك</h2>
+      <p class="landing-text">تصفح قائمة المنتجات أو تواصل معنا مباشرة.</p>
+    </div>
+    <a class="btn btn-primary btn-lg" data-go="products">ابدأ التصفح</a>
   </section>
 </section>
