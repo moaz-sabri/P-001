@@ -23,7 +23,12 @@ final class CatalogController
             'data' => $payload,
             'meta' => ['generated_at' => date('c')],
         ], 200, [
-            'Cache-Control' => 'public, max-age=0, must-revalidate',
+            /*
+             * لا يخزّن أي وسيط (متصفح/CDN/إضافة استضافة) نسخة من الكتالوج.
+             * التخزين دون اتصال تتولاه طبقة Service Worker وحدها، فتبقى
+             * البيانات المعروضة إما من الشبكة مباشرة أو نسخة محفوظة معلومة.
+             */
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
         ]);
     }
 
@@ -36,6 +41,6 @@ final class CatalogController
         if ($product === null) {
             throw new HttpError('not_found', 'المنتج غير موجود أو لم يعد متاحًا.', 404);
         }
-        Response::json(['ok' => true, 'data' => $product], 200, ['Cache-Control' => 'public, max-age=300']);
+        Response::json(['ok' => true, 'data' => $product], 200, ['Cache-Control' => 'no-store, no-cache, must-revalidate']);
     }
 }

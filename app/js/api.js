@@ -14,6 +14,8 @@
   var Api = {
     online: navigator.onLine !== false,
     lastError: null,
+    /** آخر استجابة جاءت من كاش عامل الخدمة (نسخة محفوظة لا شبكة). */
+    lastResponseOffline: false,
 
     /** طلب JSON مع مهلة زمنية ومعالجة أخطاء منظمة. */
     request: function (route, options) {
@@ -62,6 +64,7 @@
       }
 
       var gotResponse = false;
+      Api.lastResponseOffline = false;
       return fetch(url, init)
         .then(function (response) {
           gotResponse = true;
@@ -86,25 +89,35 @@
               err.fields =
                 payload && payload.error ? payload.error.fields : null;
               err.payload = payload;
+              /*
+               * الخادم ردّ فعلًا؛ إذن المشكلة ليست انقطاع اتصال — إلا إذا
+               * أفاد عامل الخدمة صراحة أن هذه النسخة محفوظة (offline).
+               */
+              err.network = false;
+              err.offline = code === "offline";
               throw err;
             }
 
-            Api.online = true;
-             if (global.App && global.App.UI && typeof global.App.UI.setOffline === "function") {
-               global.App.UI.setOffline(false);
-             }
+            Api.lastResponseOffline =
+              response.headers.get("X-LC-Offline") === "1";
+            Api.online = !Api.lastResponseOffline;
             return payload.data;
           });
         })
         .catch(function (error) {
-          // فشل شبكة أو مهلة أو خادم غير متاح
+          /*
+           * فشل شبكة أو مهلة أو خادم غير متاح.
+           * لا نلمس شريط «لا اتصال» من هنا: القرار في app.js بعد معرفة
+           * سبب الفشل، حتى لا يظهر الشريط عند خطأ خادم أو رد غير صالح.
+           */
           if (!gotResponse) {
             Api.online = false;
-          } else {
+            error.network = true;
+            error.offline = true;
+          } else if (error.network !== true) {
             Api.online = true;
-             if (global.App && global.App.UI && typeof global.App.UI.setOffline === "function") {
-               global.App.UI.setOffline(false);
-             }
+            error.network = false;
+            error.offline = error.offline === true;
           }
           Api.lastError = error;
           if (error.name === "AbortError") {
@@ -112,6 +125,8 @@
               "استغرق الطلب وقتًا طويلًا. تحقق من الاتصال وحاول مجددًا.",
             );
             timeoutError.code = "timeout";
+            timeoutError.network = true;
+            timeoutError.offline = false;
             throw timeoutError;
           }
           if (!error.code) {
@@ -119,6 +134,7 @@
             error.message = navigator.onLine
               ? "تعذّر الوصول إلى الخادم. تحقّق من الاتصال ثم أعد المحاولة."
               : "لا يوجد اتصال بالإنترنت. الطلب متوقف حتى يعود الاتصال.";
+            error.offline = true;
           }
           throw error;
         })

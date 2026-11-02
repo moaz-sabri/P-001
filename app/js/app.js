@@ -77,6 +77,17 @@
     productId: 0,
   };
 
+  /*
+   * إعادة محاولة تحميل الكتالوج بتباعد متزايد.
+   * الفشل المؤقت (خادم مشغول، تحديث نشر، شبكة متقطعة) لا يجوز أن يترك
+   * الصفحة بلا منتجات أو بشريط «لا اتصال» إلى الأبد.
+   */
+  var catalogRetry = {
+    timer: null,
+    delay: 4000,
+    notified: false,
+  };
+
   /* ============================== التوجيه ============================== */
 
   var Router = {
@@ -359,48 +370,125 @@
 
   /* ============================== التحميل ============================== */
 
+  /** هل الفشل سببه انقطاع اتصال حقيقي؟ (وليس خطأ خادم أو ردًا غير صالح) */
+  function isOfflineError(error) {
+    if (!error) return navigator.onLine === false;
+    if (error.offline === true) return true;
+    return error.code === "network_error" || error.code === "offline";
+  }
+
+  function resetCatalogRetry() {
+    if (catalogRetry.timer) {
+      clearTimeout(catalogRetry.timer);
+      catalogRetry.timer = null;
+    }
+    catalogRetry.delay = 4000;
+    catalogRetry.notified = false;
+  }
+
+  function scheduleCatalogRetry() {
+    if (catalogRetry.timer) return;
+    catalogRetry.timer = setTimeout(function () {
+      catalogRetry.timer = null;
+      loadCatalog();
+    }, catalogRetry.delay);
+    catalogRetry.delay = Math.min(catalogRetry.delay * 2, 60000);
+  }
+
   function loadCatalog() {
     return Api.snapshot(state.search)
       .then(function (data) {
-        Store.setSnapshot(data);
-        applySnapshot();
-        UI.setOffline(false);
-        if (state.view === "home" && UI.renderHomeProducts) UI.renderHomeProducts();
-      })
-      .catch(function (error) {
-        // لا يوجد اتصال؟ نعرض النسخة المحفوظة إن وُجدت (readme §11)
-        var cached = Store.getCachedSnapshot();
-        if (cached) {
-          Store.snapshot = cached;
-          applySnapshot();
-          UI.setOffline(true);
-          var age = Store.cacheAge();
-          var notice = $("menu-notice");
-          if (notice && age !== null) {
-            notice.innerHTML =
-              '<span aria-hidden="true">⚠</span><span>' +
-              "تعرض الآن نسخة محفوظة من القائمة" +
-              (age > 3600000
-                ? " عمرها " + Math.round(age / 3600000) + " ساعة."
-                : " قبل دقائق.") +
-              "</span>";
-            UI.setHidden(notice, false);
-          }
-          // الخدمة المحدّثة حدّثت الكاش في الخلفية — نقرأ النسخة الأحدث بعد لحظات
-          if (Api.online) {
-            setTimeout(function () {
-              loadCatalog().then(function () {
-                var fresh = $("menu-notice");
-                if (fresh) UI.setHidden(fresh, true);
-              });
-            }, 2500);
-          }
-          return;
+        // رد غير صالح لا يجوز أن يمرّ كأنه كتالوج فارغ.
+        if (
+          !data ||
+          !Array.isArray(data.products) ||
+          !Array.isArray(data.categories)
+        ) {
+          var invalid = new Error(
+            "وصل رد غير صالح من الخادم. لم تُحدَّث القائمة.",
+          );
+          invalid.code = "invalid_response";
+          invalid.network = false;
+          invalid.offline = false;
+          throw invalid;
         }
 
+        Store.setSnapshot(data, Api.lastResponseOffline === true);
+        applySnapshot();
+        UI.setOffline(Api.lastResponseOffline === true);
+        if (Api.lastResponseOffline) {
+          // وصلت نسخة محفوظة: نعيد المحاولة كي تصل نسخة الشبكة عند عودتها.
+          scheduleCatalogRetry();
+        } else {
+          resetCatalogRetry();
+        }
+        if (state.view === "home" && UI.renderHomeProducts)
+          UI.renderHomeProducts();
+        return true;
+      })
+      .catch(function (error) {
         UI.hideSkeleton();
-        UI.setOffline(true);
-        UI.toast(error.message, "error");
+
+        /*
+         * القاعدة الجذرية: لا نعرض شريط «لا اتصال» إلا إذا كان الفشل
+         * شبكيًا فعلًا. خطأ خادم (500) أو رد HTML أو JSON تالف يعني أن
+         * الشبكة تعمل، وكان وسمها «لا اتصال» هو سبب الرسالة الخاطئة.
+         */
+        if (isOfflineError(error)) {
+          var cached = Store.snapshot;
+          if (!cached) {
+            cached = Store.getCachedSnapshot();
+            if (cached) Store.snapshot = cached;
+          }
+
+          if (cached) {
+            applySnapshot();
+            UI.setOffline(true);
+            var age = Store.cacheAge();
+            var notice = $("menu-notice");
+            if (notice && age !== null) {
+              notice.innerHTML =
+                '<span aria-hidden="true">⚠</span><span>' +
+                "تعرض الآن نسخة محفوظة من القائمة" +
+                (age > 3600000
+                  ? " عمرها " + Math.round(age / 3600000) + " ساعة."
+                  : " قبل دقائق.") +
+                "</span>";
+              UI.setHidden(notice, false);
+            }
+          } else {
+            UI.setOffline(true);
+            if (!catalogRetry.notified) {
+              catalogRetry.notified = true;
+              UI.toast(error.message, "error");
+            }
+          }
+
+          scheduleCatalogRetry();
+          return false;
+        }
+
+        // الشبكة تعمل، لكن الخادم لم يُرجع كتالوجًا صالحًا.
+        UI.setOffline(false);
+        if (Store.snapshot) {
+          applySnapshot();
+          if (!catalogRetry.notified) {
+            catalogRetry.notified = true;
+            UI.toast(
+              "تعذّر تحديث القائمة. نعرض النسخة الأخيرة المتاحة.",
+              "warn",
+            );
+          }
+        } else if (!catalogRetry.notified) {
+          catalogRetry.notified = true;
+          UI.toast(
+            "تعذّر تحميل القائمة من الخادم. سنعيد المحاولة تلقائيًا.",
+            "error",
+          );
+        }
+
+        scheduleCatalogRetry();
+        return false;
       });
   }
 
@@ -501,6 +589,7 @@
     var id = local.id;
     Api.product(id)
       .then(function (detail) {
+        if (!Api.lastResponseOffline) UI.setOffline(false);
         if (state.view === "product" && state.productId === id)
           UI.renderProductPage(detail);
       })
@@ -640,7 +729,8 @@
 
     $("checkout-total").textContent = UI.formatPrice(Store.total());
     UI.clearError("checkout-error");
-    UI.setOffline(!navigator.onLine);
+    // نعتمد على نتيجة آخر طلب فعلي، لا على navigator.onLine وحده
+    UI.setOffline(Api.online === false);
   }
 
   function currentOrderType() {
@@ -754,20 +844,18 @@
         UI.renderCart();
         UI.renderSuccess(order);
         Router.go("success");
+        UI.setOffline(false);
         UI.toast("تم حفظ الطلب رقم #" + number + " بنجاح.", "success");
       })
       .catch(function (error) {
         UI.showError("checkout-error", error.message, error.fields);
         UI.toast("تعذّر إرسال الطلب. لم يُخصم أي شيء.", "error");
-        if (error.code === "network_error" || error.code === "timeout") {
-          UI.setOffline(true);
-        }
+        if (isOfflineError(error)) UI.setOffline(true);
       })
       .finally(function () {
         state.submitting = false;
         UI.setLoading(btn, false);
-        // قد يكون انقطاع الشبكة سبب الخطأ: نُبقي حالة الانصال كما هي
-        if (!navigator.onLine) UI.setOffline(true);
+        // حالة الانقطاع يقررها catch أعلاه بحسب نوع الخطأ، لا هذا finally.
       });
   }
 
@@ -905,7 +993,9 @@
       }
       Api.snapshot(value)
         .then(function (data) {
-          Store.setSnapshot(data);
+          Store.setSnapshot(data, Api.lastResponseOffline === true);
+          UI.setOffline(Api.lastResponseOffline === true);
+          resetCatalogRetry();
           renderMenu();
         })
         .catch(function () {
@@ -1081,15 +1171,45 @@
 
     // الاتصال: نعتمد على نتيجة الطلبات الحقيقية لا على navigator.onLine وحده
     window.addEventListener("online", function () {
-      UI.setOffline(false);
-      loadCatalog().then(function () {
-        UI.setOffline(false);
-        UI.toast("عاد الاتصال — تم تحديث القائمة.", "success");
+      var wasOffline = document.body.classList.contains("offline");
+      resetCatalogRetry();
+      loadCatalog().then(function (ok) {
+        UI.setOffline(
+          Api.online === false || Api.lastResponseOffline === true,
+        );
+        if (ok && wasOffline && !Api.lastResponseOffline) {
+          UI.toast("عاد الاتصال — تم تحديث القائمة.", "success");
+        }
       });
     });
     window.addEventListener("offline", function () {
-      UI.setOffline(true);
-      UI.toast("انقطع الاتصال. الطلب متوقف حتى يعود.", "warn");
+      /*
+       * لا نثق بالحدث وحده: بعض المتصفحات/الشبكات تطلقه عند تبديل مسار
+       * الاتصال بينما الخادم ما زال متاحًا. نتحقق فعليًا قبل إظهار الشريط.
+       */
+      Api.ping()
+        .then(function () {
+          UI.setOffline(false);
+        })
+        .catch(function (error) {
+          if (!isOfflineError(error)) {
+            // الخادم ردّ (ولو بخطأ) — ليست حالة انقطاع اتصال.
+            UI.setOffline(false);
+            return;
+          }
+          UI.setOffline(true);
+          UI.toast("انقطع الاتصال. الطلب متوقف حتى يعود.", "warn");
+          scheduleCatalogRetry();
+        });
+    });
+
+    // العودة إلى التبويب بعد انقطاع/خمول: نحدّث القائمة بدل إبقاء نسخة قديمة
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState !== "visible") return;
+      if (Api.online === false || !Store.snapshot) {
+        resetCatalogRetry();
+        loadCatalog();
+      }
     });
 
     // رجوع/تقدم في سجل المتصفح
@@ -1115,6 +1235,10 @@
     Store.loadCart();
     Store.loadLocation();
     Store.loadLayout();
+
+    // اعرض آخر كتالوج محفوظ فورًا، ثم حدّثه من الشبكة في الخلفية.
+    // هذا يضمن ظهور المنتجات حتى لو تأخّر رد الخادم أو فشل مؤقتًا.
+    Store.hydrate();
     state.location = Store.location;
 
     $("brand-link").setAttribute("href", HOME);
@@ -1153,8 +1277,33 @@
     });
 
     if ("serviceWorker" in navigator && CONFIG.sw) {
+      // تحديث تلقائي عند وصول نسخة جديدة: نطلب فحصًا صريحًا، ونعيد تحميل
+      // الصفحة مرة واحدة فقط إذا كان هناك عامل خدمة قديم يستبدل الآن.
+      var hadController = !!navigator.serviceWorker.controller;
+
+      navigator.serviceWorker.addEventListener("controllerchange", function () {
+        if (!hadController) {
+          hadController = true;
+          return;
+        }
+        try {
+          if (sessionStorage.getItem("lc_sw_reloaded") === CONFIG.version) return;
+          sessionStorage.setItem("lc_sw_reloaded", CONFIG.version || "1");
+        } catch (e) {
+          /* تجاهل */
+        }
+        location.reload();
+      });
+
       // التسجيل من جذر الموقع ليشمل نطاق /api/ أيضًا (كي يعمل التخزين دون اتصال)
       navigator.serviceWorker.register(CONFIG.sw, { scope: BASE })
+        .then(function (registration) {
+          if (registration && registration.update) {
+            registration.update().catch(function () {
+              /* تجاهل: سنحاول في الزيارة التالية */
+            });
+          }
+        })
         .catch(function () {
           /* تجاهل */
         });

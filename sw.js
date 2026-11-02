@@ -1,15 +1,20 @@
 /* ==========================================================================
    sw.js — Service Worker (نطاق الموقع الجذري)
-   يعمل على المستوى الجذر حتى يتمكن من اعتراض طلبات الـ API وتخزينها
+   يعمل على المستوى الجذري حتى يتمكن من اعتراض طلبات الـ API وتخزينها
    للعمل دون اتصال، مع استثناء أي استجابة حساسة.
 
    ملاحظات:
    - يخزّن ملفات الواجهة وبيانات الكتالوج فقط.
    - لا يخزّن لوحة الإدارة ولا متابعة الطلبات ولا طلبات POST إطلاقًا.
    - لا يوجد طابور إرسال: الطلب دون اتصال لا يُرسل ولا يُؤجَّل.
+
+   قاعدة أساسية (إصلاح جذري):
+   كل ما يُعرض من الكاش يُوسم بترويسة X-LC-Offline، وكل فشل شبكة حقيقي
+   يُترك ليصل إلى الصفحة كفشل شبكة (لا نختلقه كاستجابة JSON ناجحة)، حتى
+   تستطيع الواجهة التمييز بين «لا اتصال» و«خطأ في الخادم» بدقة.
    ========================================================================== */
 
-const VERSION = 'v1.6.3';
+const VERSION = 'v1.6.4';
 const SHELL_CACHE = `lc-shell-${VERSION}`;
 const DATA_CACHE = `lc-data-${VERSION}`;
 
@@ -116,24 +121,25 @@ self.addEventListener('fetch', (event) => {
   }
 
   // تنقّل إلى أي صفحة من صفحات التطبيق (/products، /contact، /cart، /order/...):
-  // يُخدم من كاش الهيكل عند غياب الاتصال، فلا يرى الزبون صفحة خطأ المتصفح.
-  // ملاحظة: مهم جدًا بعد الانتقال للروابط النظيفة، لأن هذه المسارات ليست
-  // من ملفات الكاش، فبدون هذا البند كان فتحها دون اتصال يفشل تمامًا.
+  // الشبكة أولًا كي تصل أحدث نسخة من الواجهة (وأرقام إصدار الأصول الجديدة)
+  // فورًا، ثم كاش الهيكل عند غياب الاتصال.
   if (request.mode === 'navigate') {
-    event.respondWith(staleWhileRevalidate(request, SHELL_CACHE));
+    event.respondWith(networkFirst(request, SHELL_CACHE, shellUrl, false, true));
     return;
   }
 
-  // ملفات هيكل التطبيق: الكاش أولًا مع تحديث في الخلفية
+  // ملفات هيكل التطبيق: الشبكة أولًا أيضًا. الاعتماد على الكاش أولًا هنا
+  // كان يسمح لنسخة قديمة من app.js بالبقاء بعد التحديث.
   if (isShellAsset(url.pathname)) {
-    event.respondWith(staleWhileRevalidate(request, SHELL_CACHE));
+    event.respondWith(networkFirst(request, SHELL_CACHE, null, false, true));
     return;
   }
 
   // بيانات الكتالوج: الشبكة أولًا (لعرض أحدث المنتجات فورًا) مع الرجوع إلى
   // الكاش عند غياب الاتصال — حتى لا تبقى منتجات قديمة/فارغة على الشاشة.
+  // نرفض تخزين أي استجابة ليست JSON صالحة، فلا يتحول خطأ HTML إلى كتالوج.
   if (route === 'catalog.snapshot' || route === 'product.get' || route === 'locations.list') {
-    event.respondWith(networkFirst(request, DATA_CACHE));
+    event.respondWith(networkFirst(request, DATA_CACHE, null, true));
   }
 });
 
@@ -152,6 +158,23 @@ function isShellAsset(pathname) {
   });
 }
 
+/**
+ * يُعيد استجابة من الكاش مع وسم صريح بأنها نسخة محفوظة.
+ * تستخدمه الواجهة لتمييز «الكتالوج المحفوظ» عن «كتالوج الشبكة».
+ */
+async function cachedResponse(response) {
+  const headers = new Headers(response.headers);
+  // الجسم من Cache API مفكوك الضغط؛ إبقاء ترويسة الضغط يفسد الاستجابة.
+  headers.delete('content-encoding');
+  headers.delete('content-length');
+  headers.set('X-LC-Offline', '1');
+  return new Response(await response.blob(), {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 // ملاحظة مهمة: لا نستخدم ignoreSearch مع مسارات الـ API،
 // لأن ذلك قد يجعل استجابة مسار تُعاد لبند مسار آخر.
 async function cacheFirst(request, cacheName) {
@@ -164,6 +187,7 @@ async function cacheFirst(request, cacheName) {
     if (response && response.ok) cache.put(request, response.clone());
     return response;
   } catch (error) {
+    // صورة مفقودة دون اتصال: استجابة فارغة أفضل من رمي خطأ في الشبكة
     return new Response('', { status: 504, statusText: 'Offline' });
   }
 }
@@ -172,48 +196,61 @@ async function cacheFirst(request, cacheName) {
  * شبكة أولًا (network-first): يُطلب من الخادم أحدث البيانات (المنتجات) فورًا،
  * ويُخزَّن النجاح في الكاش. عند غياب الاتصال (أو فشل الطلب) يُستخدم الكاش
  * المحفوظ للعمل دون اتصال. هذا يمنع بقاء نسخة قديمة/فارغة على الشاشة.
+ *
+ * عند فشل الشبكة ولا يوجد كاش نُعيد رمي الخطأ بدل اختلاق استجابة JSON،
+ * فتصل الحالة إلى الواجهة كفشل شبكة حقيقي وتُعرض رسالة «لا اتصال» الصحيحة.
+ *
+ * @param {Request} request
+ * @param {string} cacheName
+ * @param {string|null} fallbackUrl مفتاح بديل للتخزين (جذر الموقع للتنقّل)
+ * @param {boolean} requireJson لا تخزّن إلا استجابات JSON الصالحة
+ * @param {boolean} fallbackOnServerError ارجع للكاش عند 5xx (واجهة/تنقّل)
  */
-async function networkFirst(request, cacheName) {
+async function networkFirst(
+  request,
+  cacheName,
+  fallbackUrl = null,
+  requireJson = false,
+  fallbackOnServerError = false
+) {
   const cache = await caches.open(cacheName);
+  const cacheKey = fallbackUrl || request;
+
+  const cachedCopy = async () => {
+    const cached =
+      (await cache.match(request)) ||
+      (fallbackUrl ? await cache.match(fallbackUrl) : null) ||
+      (request.mode === 'navigate' ? await cache.match(shellUrl) : null);
+    return cached ? cachedResponse(cached) : null;
+  };
+
   try {
     const response = await fetch(request);
-    if (response && response.ok) {
-      cache.put(request, response.clone());
+
+    /*
+     * لا نفترض أن «الخادم ردّ» يعني «الخادم سليم». البوابات والاستضافات
+     * المشتركة ترجع 502/503 عند تعطّل الخدمة، وكان تمريرها للزبون يعني
+     * صفحة خطأ بدل واجهة محفوظة. للتنقّل والأصول نرجع للكاش عند 5xx.
+     */
+    if (fallbackOnServerError && response && response.status >= 500) {
+      const fallback = await cachedCopy();
+      if (fallback) return fallback;
+      return response;
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    const cacheable =
+      response &&
+      response.ok &&
+      (!requireJson || contentType.indexOf('application/json') !== -1);
+
+    if (cacheable) {
+      cache.put(cacheKey, response.clone());
     }
     return response;
   } catch (error) {
-    const cached = await cache.match(request);
-    if (cached) return cached;
-    return new Response(
-      JSON.stringify({ ok: false, error: { code: 'offline', message: 'لا يوجد اتصال' } }),
-      { status: 503, headers: { 'Content-Type': 'application/json; charset=utf-8' } }
-    );
+    const fallback = await cachedCopy();
+    if (fallback) return fallback;
+    throw error;
   }
-}
-
-async function staleWhileRevalidate(request, cacheName) {
-  const cache = await caches.open(cacheName);
-  const cached = await cache.match(request);
-
-  const network = fetch(request)
-    .then((response) => {
-      if (response && response.ok) cache.put(request, response.clone());
-      return response;
-    })
-    .catch(() => null);
-
-  if (cached) return cached;
-
-  const response = await network;
-  if (response) return response;
-
-  // لا اتصال ولا نسخة مخزنة
-  if (request.mode === 'navigate') {
-    const shell = await cache.match(shellUrl);
-    if (shell) return shell;
-  }
-  return new Response(
-    JSON.stringify({ ok: false, error: { code: 'offline', message: 'لا يوجد اتصال' } }),
-    { status: 503, headers: { 'Content-Type': 'application/json; charset=utf-8' } }
-  );
 }

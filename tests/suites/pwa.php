@@ -81,6 +81,25 @@ return function (): void {
     Assert::contains($sw, 'Promise.allSettled', 'كل ملف يُخزَّن على حدة مع تجاهل الفشل');
     Assert::contains($sw, 'async function precache()', 'دالة تخزين مسبق مرنة');
 
+    /* (1.2) فصل «لا اتصال» عن «خطأ الخادم» --------------------------------
+       خطأ سابق: كان عامل الخدمة يختلق استجابة JSON بنوع offline عند أي فشل،
+       فتصدّقها الواجهة أحيانًا كنجاح وأحيانًا كفشل شبكة، فيظهر شريط
+       «لا يوجد اتصال» حتى والخادم يعمل. القاعدة الآن:
+       - الفشل الشبكي الحقيقي يُرمى ليصل للمتصفح كفشل شبكة.
+       - الاستجابة المحفوظة تُوسم X-LC-Offline صراحةً.
+       - أخطاء 5xx في التنقّل/الأصول ترجع للكاش بدل صفحة خطأ.            */
+    Assert::contains($sw, 'X-LC-Offline', 'النسخة المحفوظة تُوسم صراحةً لتمييزها عن الشبكة');
+    Assert::contains($sw, 'fallbackOnServerError', 'التنقّل والأصول ترجع للكاش عند خطأ 5xx');
+    Assert::contains($sw, 'throw error;', 'فشل الشبكة الحقيقي يُمرَّر بدل اختلاق رد JSON');
+    Assert::false(str_contains($sw, "code: 'offline'"), 'عامل الخدمة لا يختلق استجابة offline');
+    Assert::contains($appJs, 'function isOfflineError(', 'الواجهة تفصل فشل الشبكة عن خطأ الخادم');
+    Assert::contains($appJs, 'Store.hydrate()', 'الواجهة تعرض الكتالوج المحفوظ فورًا عند الإقلاع');
+    Assert::contains($appJs, 'scheduleCatalogRetry()', 'فشل تحميل الكتالوج يُعاد تلقائيًا بتباعد متزايد');
+    Assert::contains($appJs, 'registration.update()', 'الواجهة تطلب فحص تحديث عامل الخدمة صراحةً');
+
+    $catalogController = (string) file_get_contents(BASE_PATH . '/src/Controllers/CatalogController.php');
+    Assert::contains($catalogController, 'no-store', 'الكتالوج لا يُخزَّن في وسيط خارج عامل الخدمة');
+
 /* (1.1) اتساق رقم النسخة -------------------------------------------
        رقم النسخة معرّف في ProjectConfig، ويجب أن يطابق سمة الاستبدال
        في صفحة التطبيق وثابت VERSION في عامل الخدمة.

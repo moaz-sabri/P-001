@@ -227,11 +227,16 @@
 
     /* -------------------------- الكتالوج -------------------------- */
 
-    setSnapshot: function (data) {
+    setSnapshot: function (data, fromCache) {
       this.snapshot = data;
       this.settings = data.settings || {};
       this.config = data.config || {};
       this.company = data.company || {};
+      this.loadedFromCache = !!fromCache;
+
+      // نسخة الكاش لا تجدّد تاريخ الحفظ، وإلا بدت البيانات القديمة حديثة.
+      if (fromCache) return;
+
       try {
         localStorage.setItem(
           CACHE_KEY,
@@ -240,7 +245,6 @@
       } catch (e) {
         /* تجاهل */
       }
-      this.loadedFromCache = false;
     },
 
     getCachedSnapshot: function () {
@@ -266,6 +270,21 @@
       } catch (e) {
         return null;
       }
+    },
+
+    /**
+     * يُظهر آخر كتالوج محفوظ فورًا قبل انتظار الشبكة.
+     * بهذه الطريقة لا تبقى الصفحة الرئيسية بلا منتجات إذا تعذّر الطلب
+     * (أو تأخّر)، ثم يستبدله رد الخادم فور وصوله.
+     */
+    hydrate: function () {
+      var cached = this.getCachedSnapshot();
+      if (cached && Array.isArray(cached.products)) {
+        this.snapshot = cached;
+        this.loadedFromCache = true;
+        return cached;
+      }
+      return null;
     },
 
     /* ------------------------ idempotency ------------------------ */
