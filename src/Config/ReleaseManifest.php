@@ -270,11 +270,10 @@ final class ReleaseManifest
             }
         }
 
+        // المجلدات الفارغة (storage/...) تُهيَّأ في الحزمة حتى لو كانت غائبة
+        // في شجرة التطوير: أداة البناء تنشئها (mkdir) بغضّ النظر. لذا
+        // نُعلِن .gitkeep دائمًا، ولا نعتمد على وجود storage/ على القرص.
         foreach (self::INCLUDE_DIRS_EMPTY as $dir) {
-            $full = $source . '/' . $dir;
-            if (!is_dir($full)) {
-                continue;
-            }
             foreach (['config', 'database', 'backups', 'logs', 'tmp', 'uploads'] as $sub) {
                 $out[$dir . '/' . $sub . '/.gitkeep'] = true;
             }
