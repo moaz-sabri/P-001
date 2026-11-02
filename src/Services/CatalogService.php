@@ -44,6 +44,9 @@ final class CatalogService
         $counts   = [];
         foreach ($products as $product) {
             $cid = $product['category_id'];
+            if ($cid === null) {
+                continue;
+            }
             $counts[$cid] = ($counts[$cid] ?? 0) + 1;
         }
 
