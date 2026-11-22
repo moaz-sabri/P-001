@@ -112,7 +112,7 @@ return function (): void {
     );
 
     Assert::false(
-        (bool) Database::value("SELECT COUNT(*) FROM sqlite_master WHERE name = 'admin_users'"),
+        (bool) Database::value("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'admin_users'"),
         'لا يوجد جدول مستخدمين (مدير واحد فقط)'
     );
 
@@ -196,7 +196,7 @@ return function (): void {
         Assert::same(0, $count, 'استعلام محضّر ضد: ' . mb_substr($injection, 0, 24));
     }
     Assert::greater(
-        (int) Database::value("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='products'"),
+        (int) Database::value("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'products'"),
         0,
         'جدول المنتجات سليم بعد محاولات الحقن'
     );

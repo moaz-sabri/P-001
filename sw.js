@@ -27,6 +27,7 @@ const APP_BASE = new URL('./app/', SCOPE).pathname;
 // app/index.html — الروابط النظيفة مثل /cart و /checkout تبدأ من الجذر.
 
 const shellUrl = SCOPE;
+const offlineUrl = APP_BASE + 'pages/offline.html';
 
 const SHELL_ASSETS = [
   SCOPE,
@@ -42,6 +43,7 @@ const SHELL_ASSETS = [
   APP_BASE + 'pages/landing.html',
   APP_BASE + 'pages/contact.html',
   APP_BASE + 'pages/privacy.html',
+  offlineUrl,
   APP_BASE + 'assets/icons/icon-512.png',
 ];
 
@@ -220,7 +222,8 @@ async function networkFirst(
     const cached =
       (await cache.match(request)) ||
       (fallbackUrl ? await cache.match(fallbackUrl) : null) ||
-      (request.mode === 'navigate' ? await cache.match(shellUrl) : null);
+      (request.mode === 'navigate' ? await cache.match(shellUrl) : null) ||
+      (request.mode === 'navigate' ? await cache.match(offlineUrl) : null);
     return cached ? cachedResponse(cached) : null;
   };
 

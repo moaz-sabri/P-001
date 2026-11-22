@@ -1,6 +1,6 @@
 # دليل المطور — القالب التجاري الخفيف
 
-> **Light Commerce Template** · الإصدار 1.6.1 · PHP 8.1+ · SQLite · PWA  
+> **Light Commerce Template** · الإصدار 1.6.4 · PHP 8.1+ · MySQL · PWA
 > وثيقة موجهة لمن **يعرّض القالب** أو **يضيف عليه** (مطور، مشرف، بناي).  
 > للاستخدام (نشر، تخصيص no-code) راجع [`README.md`](README.md) و[`docs/BUILD_GUIDE.md`](docs/BUILD_GUIDE.md).
 
@@ -13,7 +13,7 @@
 | **مصدر واحد لـ "كيف يُبنى الموقع"** | `src/Config/ProjectConfig.php` — ثوابت + دوال التغطية (overrides) |
 | **مصدر واحد لـ "ماذا يُفعل"** | `src/Config/TemplatePatterns.php` (أنماط القدرات) + `BusinessPresets.php` (للتوافق) |
 | **مصدر واحد لـ "مَن الشركة"** | `app/data/company.json` (صفحتا Home/Contact) |
-| **مصدر واحد لـ "البيانات التشغيلية"** | SQLite (categories, products, orders, …) + جدول `settings` |
+| **مصدر واحد لـ "البيانات التشغيلية"** | MySQL (categories, products, orders, …) + جدول `settings` |
 | **لا اعتماديات خارجية** | PHP stdlib + GD (اختياري) — بلا Composer/bundler |
 
 - **البنية ثابتة، المحتوى يُملأ، السلوك يُختار.**
@@ -190,7 +190,7 @@ src/
 2. `php tools/security-probe.php <url>` (52 live checks) on staging only (locks account).
 3. `php bin/console security:check` returns protected ✔.
 4. Ensure `storage/` not downloadable from browser (nginx or move-outside-webroot).
-5. Verify `.gitignore` excludes `storage/config/local.php`, `storage/database/*.sqlite`, uploads.
+5. Verify `.gitignore` excludes `storage/config/local.php`, database dumps, uploads.
 6. Password hashing bcrypt/argon via `password_hash`.
 7. CSRF on all mutating admin routes; session HttpOnly/SameSite=Strict/Secure (HTTPS).
 8. Rate-limit `ORDER_RATE_LIMIT_PER_MINUTE` for orders + `ADMIN_MAX_LOGIN_ATTEMPTS`.
@@ -267,7 +267,7 @@ Cache busting: `?v=VERSION` on asset URLs in `app/index.html`. Service worker `s
 - Admin sessions: `lc_admin` cookie; idle 2h, max 12h.
 - Login lockout 15 min after 6 failures; clear `login_attempts` table to reset.
 - `php tools/check-admin-pass.php` to verify stored hash.
-- DB inspect: `sqlite3 storage/database/app.sqlite` (avoid writing while app runs; read-only okay).
+- DB inspect: use the MySQL client against the configured test database (avoid destructive commands).
 
 ---
 

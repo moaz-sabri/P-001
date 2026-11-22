@@ -18,16 +18,26 @@ define('APP_START', microtime(true));
 
 $filter = $argv[1] ?? '';
 
-// قاعدة بيانات منفصلة للاختبارات (لا نلمس بيانات النسخة)
-$testDb = sys_get_temp_dir() . '/lc-test-' . getmypid() . '.sqlite';
-@unlink($testDb);
+// قاعدة بيانات MySQL منفصلة للاختبارات (لا نلمس بيانات النسخة)
+$testDatabase = getenv('DB_TEST_DATABASE') ?: '';
+if ($testDatabase === '') {
+    fwrite(STDERR, "DB_TEST_DATABASE is required. Configure a dedicated MySQL test database before running tests.\n");
+    exit(2);
+}
 
 $config = [
     'installed_at' => date('c'),
     'debug'        => true,
     'app_key'      => bin2hex(random_bytes(16)),
     'app'          => ['base_url' => 'https://test.local'],
-    'db'           => ['path' => $testDb],
+    'db'           => [
+        'driver'   => 'mysql',
+        'host'     => getenv('DB_TEST_HOST') ?: getenv('DB_HOST') ?: '127.0.0.1',
+        'port'     => (int) (getenv('DB_TEST_PORT') ?: getenv('DB_PORT') ?: 3306),
+        'database' => $testDatabase,
+        'username' => getenv('DB_TEST_USERNAME') ?: getenv('DB_USERNAME') ?: 'app',
+        'password' => getenv('DB_TEST_PASSWORD') ?: getenv('DB_PASSWORD') ?: '',
+    ],
     'admin'        => [
         'username'      => 'tester',
         'password_hash' => password_hash('TestPass123!', PASSWORD_DEFAULT),
@@ -46,8 +56,8 @@ file_put_contents($configFile, "<?php\nreturn " . var_export($config, true) . ";
  * إعدادات مؤقت، فلا نكتب فوق storage/config/local.php ولا نغيّر بيانات
  * دخول النسخة الحقيقية إطلاقًا.
  */
-$cleanup = static function () use ($testDb, $configFile, $configDir): void {
-    @unlink($testDb);
+// لا نحذف قاعدة الاختبار تلقائيًا؛ إعادة التهيئة تتم عبر Migrations::reset().
+$cleanup = static function () use ($configFile, $configDir): void {
     @unlink($configFile);
     @rmdir($configDir);
 };
@@ -61,7 +71,8 @@ require BASE_PATH . '/tests/Assert.php';
 use App\Core\Database;
 use App\Core\Migrations;
 
-Migrations::migrate();
+// كل تشغيل يبدأ من مخطط نظيف حتى لا تتأثر النتائج بتشغيل سابق.
+Migrations::reset();
 
 // -----------------------------------------------------------------------------
 // بيانات اختبار: تصنيفان، ثلاثة منتجات، موقعان

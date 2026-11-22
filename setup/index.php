@@ -236,16 +236,14 @@ if (!$rebuildOk) {
                 'debug'        => false,
                 'app_key'      => bin2hex(random_bytes(16)),
                 'app'          => ['base_url' => $url],
-                'db'           => (getenv('DB_HOST') !== false && getenv('DB_HOST') !== '')
-                    ? [
-                        'driver'   => 'mysql',
-                        'host'     => (string) getenv('DB_HOST'),
-                        'port'     => (int) (getenv('DB_PORT') ?: 3306),
-                        'database' => (string) (getenv('DB_DATABASE') ?: getenv('DB_NAME') ?: 'app'),
-                        'username' => (string) (getenv('DB_USERNAME') ?: getenv('DB_USER') ?: 'app'),
-                        'password' => (string) (getenv('DB_PASSWORD') ?: getenv('DB_PASS') ?: 'appsecret'),
-                    ]
-                    : ['path' => BASE_PATH . '/storage/database/app.sqlite'],
+                'db'           => [
+                    'driver'   => 'mysql',
+                    'host'     => (string) (getenv('DB_HOST') ?: '127.0.0.1'),
+                    'port'     => (int) (getenv('DB_PORT') ?: 3306),
+                    'database' => (string) (getenv('DB_DATABASE') ?: getenv('DB_NAME') ?: 'app'),
+                    'username' => (string) (getenv('DB_USERNAME') ?: getenv('DB_USER') ?: 'app'),
+                    'password' => (string) (getenv('DB_PASSWORD') ?: getenv('DB_PASS') ?: 'appsecret'),
+                ],
                 'admin'        => [
                     'username'      => $user,
                     'password_hash' => password_hash($pass, PASSWORD_DEFAULT),

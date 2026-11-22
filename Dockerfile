@@ -6,13 +6,13 @@
 FROM php:8.3-fpm-alpine
 
 # --- امتدادات PHP المطلوبة -------------------------------------------------
-# pdo_sqlite: قاعدة البيانات | gd: تصغير الصور | intl: دعم النصوص
+# pdo_mysql: قاعدة البيانات | gd: تصغير الصور | intl: دعم النصوص
 # ملاحظة: fileinfo مدمج في PHP 8 فلا نحتاج تثبيته.
 RUN set -eux; \
     apk add --no-cache --virtual .build-deps \
-        $PHPIZE_DEPS icu-dev sqlite-dev libpng-dev libjpeg-turbo-dev libwebp-dev; \
+        $PHPIZE_DEPS icu-dev libpng-dev libjpeg-turbo-dev libwebp-dev; \
     docker-php-ext-configure gd --with-jpeg --with-webp; \
-    docker-php-ext-install -j"$(nproc)" pdo_sqlite pdo_mysql gd intl; \
+    docker-php-ext-install -j"$(nproc)" pdo_mysql gd intl; \
     apk del .build-deps; \
     rm -rf /tmp/*
 
@@ -35,7 +35,7 @@ COPY . /var/www/html
 # لا تُنسخ الأسرار ولا قاعدة البيانات المحلية ولا السجلات إلى الصورة
 RUN set -eux; \
     rm -f /var/www/html/storage/config/local.php; \
-    rm -f /var/www/html/storage/database/*.sqlite /var/www/html/storage/database/*.sqlite-wal /var/www/html/storage/database/*.sqlite-shm; \
+    rm -f /var/www/html/storage/database/*; \
     rm -rf /var/www/html/storage/logs/* /var/www/html/storage/tmp/* /var/www/html/storage/backups/*; \
     rm -f /var/www/html/app/uploads/products/*.png /var/www/html/app/uploads/*.png; \
     rm -rf /var/www/html/.git; \

@@ -1,10 +1,10 @@
 # القالب التجاري الخفيف
 
 > قالب ويب تجاري مستقل، قابل للتثبيت كتطبيق PWA، بواجهة عربية كاملة (RTL)،
-> ولوحة إدارة لمدير واحد، وقاعدة بيانات SQLite واحدة.
+> ولوحة إدارة لمدير واحد، وقاعدة بيانات MySQL واحدة.
 > يبدأ كنموذج لمطعم/مقهى، ويتحوّل إلى أي نشاط آخر باختيار واحد عند التهيئة.
 
-الإصدار 1.3 · PHP 8.1+ · SQLite · PWA · بلا مكتبات خارجية · بلا اشتراكات
+الإصدار 1.6.4 · PHP 8.1+ · MySQL · PWA · بلا مكتبات خارجية · بلا اشتراكات
 
 **فكرة القالب:** بنية ثابتة لا تتغيّر، ومحتوى لا يتغيّر الكود.
 - **المحتوى** (اسم، نبذة، صور، تواصل، أقسام) → ملف واحد: `app/data/company.json`
@@ -64,7 +64,7 @@
 - بدون Composer، بلا npm، بلا خطوة بناء — انسخ الملفات وارفعها.
 - مولّد رموز QR كامل بلغة PHP خالصة (ISO/IEC 18004، مع Reed–Solomon).
 - مولّد أيقونات PWA بصيغة PNG بلا GD (كتابة PNG يدوية).
-- قاعدة بيانات SQLite واحدة بمعاملات واستعلامات محضّرة.
+- قاعدة بيانات MySQL واحدة بمعاملات واستعلامات محضّرة.
 - 300+ اختبارًا آليًا تغطي معايير القبول (`php tests/run.php`).
 - روابط نظيفة بلا أسماء ملفات داخلية: `/cart` و `/checkout` و `/order/{رمز}`،
   ورابط واحد للموقع (`/`) يعمل على جذر النطاق وداخل مجلد فرعي.
@@ -144,7 +144,7 @@ php -S localhost:8000 bin/serve.php
 
 ## 3. النشر على خادم nginx
 
-**المتطلبات:** nginx + PHP-FPM، و PHP 8.1+ مع `pdo_sqlite`.
+**المتطلبات:** nginx + PHP-FPM، و PHP 8.1+ مع `pdo_mysql`، وخادم MySQL 8+.
 لا Composer ولا npm ولا خدمات خارجية.
 
 > **nginx هو الخادم الوحيد المدعوم.** لا ملفات `.htaccess` في القالب،
@@ -157,14 +157,14 @@ php -S localhost:8000 bin/serve.php
 | --- | --- | --- |
 | nginx | 1.18 | مع `php-fpm` |
 | PHP | 8.1 | مُختبَر على 8.3 و 8.4 |
-| SQLite3 + PDO | مع الإصدار | `pdo_sqlite` |
+| MySQL + PDO | 8.0+ | `pdo_mysql` |
 | mbstring | مطلوب | للعرض العربي الصحيح |
 | GD (اختياري) | غير مطلوب | لتوليد الصور فقط |
 | fileinfo | مدمج | للتحقق من نوع الصورة |
 
-تأكد من `pdo_sqlite`:
+تأكد من `pdo_mysql`:
 ```bash
-php -m | grep pdo_sqlite
+php -m | grep pdo_mysql
 ```
 
 ### خطوات النشر
@@ -221,7 +221,7 @@ php -m | grep pdo_sqlite
 — المنع يأتي من تثبيت إعداد nginx:
 
 ```
-https://your-site.com/storage/database/app.sqlite   ← كان سيُنزَّل بكل الطلبات
+https://your-site.com/storage/database/app.sql     ← يجب أن يبقى محميًا وغير قابل للتنزيل
 ```
 
 إن لم تكن able على تثبيت قواعد في خادمك (استضافة مشتركة بلا صلاحية)،
@@ -238,7 +238,7 @@ php tools/move-outside-webroot.php --yes    # تنفيذ
 | من | إلى |
 | --- | --- |
 | `storage/config/local.php` | `../private-config/local.php` |
-| `storage/database/app.sqlite` | `../private-data/app.sqlite` |
+| MySQL database | خارج جذر الويب أو محمي بصلاحيات قاعدة البيانات |
 
 ثم تحقّق:
 
@@ -294,7 +294,7 @@ project/
 │
 ├── storage/                 (غير متاح عبر الويب — محمي بقواعد الخادم أو خارج public_html)
 │   ├── config/local.php     ★ أسرار النسخة (لا يُرفع إلى Git)
-│   ├── database/app.sqlite  قاعدة البيانات
+│   ├── database/             ملفات مؤقتة فقط — البيانات في MySQL
 │   ├── uploads/  backups/  logs/  tmp/
 │
 ├── tests/                   300+ اختبارًا
@@ -494,7 +494,7 @@ public const ORDER_TYPES = [ /* ... */ ];
 
 ```bash
 # يجب أن يعيد 404
-curl -I https://your-site.com/storage/database/app.sqlite
+curl -I https://your-site.com/storage/database/app.sql
 curl -I https://your-site.com/src/Config/ProjectConfig.php
 curl -I https://your-site.com/app/uploads/test.php
 ```
@@ -510,7 +510,7 @@ curl -I https://your-site.com/app/uploads/test.php
 ### من الطرفية
 
 ```bash
-php bin/console backup      # ينشئ storage/backups/backup-YYYYmmdd-HHMMSS.sqlite
+php bin/console backup      # ينشئ نسخة MySQL في storage/backups/
 ```
 
 تُنشأ النسخة عبر `VACUUM INTO`، أي نسخة سليمة حتى أثناء العمل.
@@ -519,8 +519,7 @@ php bin/console backup      # ينشئ storage/backups/backup-YYYYmmdd-HHMMSS.sq
 ### الاستعادة
 
 1. أوقف الاستقبال مؤقتًا (اختياري).
-2. انسخ ملف النسخة إلى `storage/database/app.sqlite`.
-3. احذف `app.sqlite-wal` و `app.sqlite-shm` إن وُجدا.
+2. استورد نسخة MySQL باستخدام أدوات MySQL الرسمية.
 4. أعد التشغيل.
 
 نصيحة: اجعل نسخة يومية تلقائية عبر Cron:
@@ -775,7 +774,7 @@ php bin/console security:check
 أو افتح هذا الرابط في المتصفح:
 
 ```
-https://your-site.com/storage/database/app.sqlite
+https://your-site.com/storage/database/app.sql
 ```
 
 | النتيجة | المعنى |

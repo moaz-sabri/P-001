@@ -74,6 +74,9 @@ return function (): void {
     // بعد الانتقال للروابط النظيفة: فتح /cart دون اتصال لا يجوز أن يفشل
     Assert::contains($sw, "if (request.mode === 'navigate')", 'التنقّل يُخدَم من كاش الهيكل عند غياب الاتصال');
     Assert::contains($sw, 'const shellUrl = SCOPE;', 'نسخة الهيكل المخزّنة هي جذر الموقع');
+    Assert::true(is_file(BASE_PATH . '/app/pages/offline.html'), 'صفحة Offline صريحة موجودة');
+    Assert::contains($sw, 'offlineUrl', 'عامل الخدمة يملك وجهة Offline صريحة');
+    Assert::contains($sw, 'cache.match(offlineUrl)', 'التنقّل يرجع إلى صفحة Offline عند غياب الهيكل');
 
     // خطأ سابق: cache.addAll يرسل الطلبات دفعة واحدة، ويفشل كليًا على
     // الخوادم قليلة العمّال (مثل php -S) فيبقى الكاش فارغًا بلا اتصال.

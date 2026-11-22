@@ -1,14 +1,14 @@
 {
     "schema_version": 1,
     "brand": {
-        "name": "Test",
-        "tagline": "Subtest",
+        "name": "اختبار",
+        "tagline": "تجربة",
         "logo": "",
         "hero_image": "",
         "cover_image": ""
     },
     "about": {
-        "summary": "Subtest",
+        "summary": "تجربة",
         "story": "",
         "highlights": [],
         "gallery": []
@@ -17,9 +17,9 @@
         "layout": "classic",
         "height": "large",
         "hero": {
-            "eyebrow": "Subtest",
+            "eyebrow": "تجربة",
             "title": "",
-            "text": "Subtest",
+            "text": "تجربة",
             "primary_label": "تصفّح المعروضات",
             "primary_url": "",
             "secondary_label": "",

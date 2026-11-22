@@ -8,19 +8,18 @@ use PDO;
 use PDOException;
 
 /**
- * ���?�?�? �?�?�?�?�? �?�?�?�?�?�?�?�? �?? SQLite �?�?�?�? MySQL.
+ * PDO MySQL database wrapper with prepared statements and transactions.
  *
  * �?�?�?�?�? �?�?�?�?�?�?�?:
- *  - �?�?�?�? 'db.path' ��? SQLite.
- *  - �?�?�?�? 'db.host' / 'db.database' (�� env DB_* ) ��? MySQL.
- *  Database::usePath() �? SQLite �?�? ��?�? (�?�?�?�?�?�?).
+ *  - Database settings are read from db.* or DB_* environment variables.
+ *  - MySQL is the only supported database driver.
  */
 final class Database
 {
     private static ?PDO $pdo = null;
     private static int $txDepth = 0;
     private static ?string $pathOverride = null;
-    private static string $driver = 'sqlite';
+    private static string $driver = 'mysql';
 
     public static function pdo(): PDO
     {
@@ -33,20 +32,11 @@ final class Database
             $config = [];
         }
 
-        $driver = strtolower((string) ($config['driver'] ?? ''));
-        if ($driver === '') {
-            if (self::$pathOverride !== null || isset($config['path'])) {
-                $driver = 'sqlite';
-            } elseif (isset($config['host']) || isset($config['database']) || isset($config['name'])) {
-                $driver = 'mysql';
-            } elseif (getenv('DB_HOST')) {
-                $driver = 'mysql';
-            } else {
-                $driver = 'sqlite';
-            }
+        $driver = strtolower((string) ($config['driver'] ?? 'mysql'));
+        if ($driver !== 'mysql') {
+            throw new \RuntimeException('MySQL is required. Configure db.driver=mysql and DB_HOST/DB_DATABASE.');
         }
-
-        self::$driver = $driver;
+        self::$driver = 'mysql';
 
         if ($driver === 'mysql') {
             $host = (string) ($config['host'] ?? getenv('DB_HOST') ?: '127.0.0.1');
@@ -73,30 +63,7 @@ final class Database
             return $pdo;
         }
 
-        // SQLite
-        $path = self::$pathOverride ?? (string) app_config('db.path', BASE_PATH . '/storage/database/app.sqlite');
-        $dir  = dirname($path);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0775, true);
-        }
-
-        try {
-            $pdo = new PDO('sqlite:' . $path, null, null, [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES   => false,
-            ]);
-        } catch (PDOException $e) {
-            throw new \RuntimeException('SQLite connection failed: ' . $e->getMessage(), 0, $e);
-        }
-
-        $pdo->exec('PRAGMA foreign_keys = ON');
-        $pdo->exec('PRAGMA journal_mode = WAL');
-        $pdo->exec('PRAGMA synchronous = NORMAL');
-        $pdo->exec('PRAGMA busy_timeout = 5000');
-
-        self::$pdo = $pdo;
-        return $pdo;
+        throw new \LogicException('Unreachable database driver branch.');
     }
 
     public static function driver(): string
@@ -108,13 +75,10 @@ final class Database
         return self::$driver;
     }
 
-    /** SQLite-only path override (tests). */
+    /** Retained only to fail fast for old SQLite-based test harnesses. */
     public static function usePath(string $path): void
     {
-        self::$pdo    = null;
-        self::$txDepth = 0;
-        self::$pathOverride = $path;
-        self::$driver = 'sqlite';
+        throw new \LogicException('SQLite test databases are no longer supported; use a MySQL test database.');
     }
 
     public static function close(): void

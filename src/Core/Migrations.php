@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Core;
 
 /**
- * Database migrations for SQLite and MySQL.
+ * Database migrations for the MySQL production schema.
  */
 final class Migrations
 {
@@ -41,7 +41,7 @@ final class Migrations
             CREATE TABLE IF NOT EXISTS categories (
                 id          INT AUTO_INCREMENT PRIMARY KEY,
                 name        VARCHAR(255) NOT NULL,
-                description TEXT NOT NULL DEFAULT (''),
+                description VARCHAR(4000) NOT NULL DEFAULT '',
                 image_path  VARCHAR(500) NOT NULL DEFAULT '',
                 sort_order  INT NOT NULL DEFAULT 0,
                 is_active   TINYINT NOT NULL DEFAULT 1,
@@ -56,7 +56,7 @@ final class Migrations
                 description   TEXT NOT NULL DEFAULT (''),
                 price_minor   BIGINT NOT NULL DEFAULT 0,
                 image_path    VARCHAR(500) NOT NULL DEFAULT '',
-                extra_json    TEXT NOT NULL,
+                extra_json    VARCHAR(4000) NOT NULL DEFAULT '{}',
                 is_available  TINYINT NOT NULL DEFAULT 1,
                 is_featured   TINYINT NOT NULL DEFAULT 0,
                 sort_order    INT NOT NULL DEFAULT 0,
@@ -70,7 +70,7 @@ final class Migrations
                 code        VARCHAR(64) NOT NULL UNIQUE,
                 name        VARCHAR(255) NOT NULL,
                 type        VARCHAR(64) NOT NULL DEFAULT '',
-                note        TEXT NOT NULL DEFAULT (''),
+                note        VARCHAR(4000) NOT NULL DEFAULT '',
                 is_active   TINYINT NOT NULL DEFAULT 1,
                 sort_order  INT NOT NULL DEFAULT 0,
                 created_at  VARCHAR(64) NOT NULL DEFAULT '',
@@ -88,12 +88,12 @@ final class Migrations
                 location_id        INT NULL,
                 location_label     VARCHAR(255) NOT NULL DEFAULT '',
                 status             VARCHAR(64) NOT NULL DEFAULT 'new',
-                fields_json        TEXT NOT NULL DEFAULT ('{}'),
-                notes              TEXT NOT NULL DEFAULT (''),
+                fields_json        VARCHAR(4000) NOT NULL DEFAULT '{}',
+                notes              VARCHAR(4000) NOT NULL DEFAULT '',
                 total_minor        BIGINT NOT NULL DEFAULT 0,
                 items_count        INT NOT NULL DEFAULT 0,
                 idempotency_key    VARCHAR(128) NULL UNIQUE,
-                cancel_reason      TEXT NOT NULL DEFAULT (''),
+                cancel_reason      VARCHAR(4000) NOT NULL DEFAULT '',
                 created_at         VARCHAR(64) NOT NULL DEFAULT '',
                 updated_at         VARCHAR(64) NOT NULL DEFAULT '',
                 FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL
@@ -107,7 +107,7 @@ final class Migrations
                 unit_price_minor BIGINT NOT NULL DEFAULT 0,
                 quantity         INT NOT NULL DEFAULT 1,
                 line_total_minor BIGINT NOT NULL DEFAULT 0,
-                extra_json       TEXT NOT NULL DEFAULT ('{}'),
+                extra_json       VARCHAR(4000) NOT NULL DEFAULT '{}',
                 created_at       VARCHAR(64) NOT NULL DEFAULT '',
                 FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
                 FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
@@ -119,7 +119,7 @@ final class Migrations
                 from_status VARCHAR(64) NOT NULL DEFAULT '',
                 to_status   VARCHAR(64) NOT NULL,
                 actor       VARCHAR(64) NOT NULL DEFAULT 'system',
-                note        TEXT NOT NULL DEFAULT (''),
+                note        VARCHAR(4000) NOT NULL DEFAULT '',
                 created_at  VARCHAR(64) NOT NULL DEFAULT '',
                 FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
